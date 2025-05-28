@@ -1,0 +1,15 @@
+# 游戏服务器框架应用配置文件
+server:
+  port: 8080
+
+spring:
+  application:
+    name: game-server-framework
+  profiles:
+    active: dev
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.lx.gameserver: DEBUG
