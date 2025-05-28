@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  文件名: pom.xml
+  用途: 高性能分布式游戏服务器框架的父POM配置
+  内容: 
+    - 统一管理项目的依赖版本
+    - 配置Java 21运行环境
+    - 配置构建插件
+    - 管理所有子模块
+  技术栈: 
+    - Java 21
+    - Spring Boot 3.2+
+    - Netty
+    - Dubbo
+    - Protobuf
+    - MyBatis Plus
+    - Redis & Caffeine
+    - Disruptor
+  依赖关系: 作为所有子模块的父模块，统一管理版本与构建配置
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 项目坐标 -->
+    <groupId>com.lx.gameserver</groupId>
+    <artifactId>game-server-framework</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <!-- 项目基本信息 -->
+    <name>Game Server Framework</name>
+    <description>高性能分布式游戏服务器框架</description>
+    
+    <!-- 子模块列表 -->
+    <modules>
+        <!-- 启动器模块 -->
+        <module>launcher</module>
+        
+        <!-- 公共模块 -->
+        <module>common/common-core</module>
+        <module>common/common-protocol</module>
+        <module>common/common-api</module>
+        
+        <!-- 框架模块 -->
+        <module>frame/frame-network</module>
+        <module>frame/frame-db</module>
+        <module>frame/frame-cache</module>
+        <module>frame/frame-event</module>
+        <module>frame/frame-actor</module>
+        <module>frame/frame-concurrent</module>
+        <module>frame/frame-rpc</module>
+        
+        <!-- 服务模块 -->
+        <module>service/service-gateway</module>
+        <module>service/service-login</module>
+        <module>service/service-chat</module>
+        <module>service/service-logic</module>
+        <module>service/service-scene</module>
+        <module>service/service-rank</module>
+        <module>service/service-activity</module>
+        <module>service/service-payment</module>
+    </modules>
+    
+    <!-- 属性配置 -->
+    <properties>
+        <!-- Java版本配置 -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.compilerVersion>21</maven.compiler.compilerVersion>
+        <maven.compiler.release>21</maven.compiler.release>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        
+        <!-- 依赖版本配置 -->
+        <spring-boot.version>3.2.0</spring-boot.version>
+        <netty.version>4.1.100.Final</netty.version>
+        <dubbo.version>3.2.9</dubbo.version>
+        <protobuf.version>3.24.4</protobuf.version>
+        <protobuf-java-format.version>1.4</protobuf-java-format.version>
+        <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
+        <mysql-connector.version>8.0.33</mysql-connector.version>
+        <redis.version>3.1.0</redis.version>
+        <caffeine.version>3.1.8</caffeine.version>
+        <disruptor.version>3.4.4</disruptor.version>
+        <lombok.version>1.18.30</lombok.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        <logback.version>1.4.11</logback.version>
+        <commons-lang3.version>3.13.0</commons-lang3.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-io.version>2.15.0</commons-io.version>
+        <guava.version>32.1.3-jre</guava.version>
+        <jackson.version>2.15.3</jackson.version>
+        <junit.version>5.10.1</junit.version>
+        <mockito.version>5.7.0</mockito.version>
+        <p3c-pmd.version>2.1.1</p3c-pmd.version>
+        
+        <!-- 插件版本配置 -->
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-checkstyle-plugin.version>3.3.0</maven-checkstyle-plugin.version>
+        <license-maven-plugin.version>4.2</license-maven-plugin.version>
+    </properties>
+    
+    <!-- 依赖管理 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot 依赖 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- Netty 网络通信 -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            
+            <!-- Dubbo 微服务通信 -->
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo</artifactId>
+                <version>${dubbo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-spring-boot-starter</artifactId>
+                <version>${dubbo.version}</version>
+            </dependency>
+            
+            <!-- Protobuf 协议定义 -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.googlecode.protobuf-java-format</groupId>
+                <artifactId>protobuf-java-format</artifactId>
+                <version>${protobuf-java-format.version}</version>
+            </dependency>
+            
+            <!-- MyBatis Plus 数据库操作 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql-connector.version}</version>
+            </dependency>
+            
+            <!-- Redis 与 Caffeine 缓存 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
+            </dependency>
+            
+            <!-- Disruptor 高性能事件处理 -->
+            <dependency>
+                <groupId>com.lmax</groupId>
+                <artifactId>disruptor</artifactId>
+                <version>${disruptor.version}</version>
+            </dependency>
+            
+            <!-- Lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            
+            <!-- 日志 -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            
+            <!-- 工具库 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            
+            <!-- 测试框架 -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <!-- 构建配置 -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Maven编译插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                        <release>${maven.compiler.release}</release>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+                
+                <!-- 资源处理插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven-resources-plugin.version}</version>
+                    <configuration>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                </plugin>
+                
+                <!-- 源码打包插件 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                
+                <!-- Checkstyle插件 - 阿里巴巴Java规范 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${maven-checkstyle-plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.alibaba.p3c</groupId>
+                            <artifactId>p3c-pmd</artifactId>
+                            <version>${p3c-pmd.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <configLocation>rulesets/java/ali-comment.xml</configLocation>
+                        <encoding>UTF-8</encoding>
+                        <consoleOutput>true</consoleOutput>
+                        <failsOnError>true</failsOnError>
+                        <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>validate</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                
+                <!-- License插件 -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${license-maven-plugin.version}</version>
+                    <configuration>
+                        <licenseName>apache_v2</licenseName>
+                        <copyrightOwners>Liu Xiao</copyrightOwners>
+                        <encoding>UTF-8</encoding>
+                        <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                    </configuration>
+                </plugin>
+                
+                <!-- Spring Boot插件 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

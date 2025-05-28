@@ -1,0 +1,47 @@
+# 编译输出目录
+target/
+
+# IDE相关文件
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# 日志文件
+logs/
+*.log
+
+# Mac OS 系统文件
+.DS_Store
+
+# 本地配置文件（可能包含敏感信息）
+application-local.yml
+application-local.properties
+*.local.yml
+*.local.properties
+
+# Maven相关
+.mvn/
+mvnw
+mvnw.cmd
+
+# 其他构建产物和临时文件
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+.factorypath
+.apt_generated/
+.apt_generated_tests/
+.springBeans
+.sts4-cache/
+bin/
+dependency-reduced-pom.xml
