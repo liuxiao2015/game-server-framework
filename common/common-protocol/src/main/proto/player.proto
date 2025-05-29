@@ -1,0 +1,422 @@
+/*
+ * 文件名: player.proto
+ * 用途: 玩家相关消息协议定义
+ * 实现内容:
+ *   - 定义玩家登录、注册相关消息
+ *   - 定义玩家信息查询和更新消息
+ *   - 定义玩家状态和属性消息
+ *   - 支持玩家数据同步和管理
+ * 技术选型:
+ *   - Protocol Buffers 3 语法
+ *   - 导入base.proto基础消息
+ *   - 支持复杂的玩家数据结构
+ * 依赖关系:
+ *   - 依赖base.proto基础协议
+ *   - 被玩家服务和客户端使用
+ */
+
+syntax = "proto3";
+
+package com.lx.gameserver.protocol.player;
+
+import "base.proto";
+
+option java_package = "com.lx.gameserver.protocol.player";
+option java_outer_classname = "PlayerProto";
+option java_multiple_files = true;
+
+// 玩家登录请求
+message LoginRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 用户名
+    string username = 2;
+    
+    // 密码（加密后）
+    string password = 3;
+    
+    // 登录方式
+    LoginType login_type = 4;
+    
+    // 设备信息
+    DeviceInfo device_info = 5;
+    
+    // 验证码（可选，某些登录方式需要）
+    string captcha = 6;
+    
+    // 第三方登录token（可选）
+    string third_party_token = 7;
+}
+
+// 玩家登录响应
+message LoginResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 玩家信息
+    PlayerInfo player_info = 4;
+    
+    // 会话token
+    string session_token = 5;
+    
+    // token过期时间
+    int64 token_expire_time = 6;
+    
+    // 服务器列表（可选）
+    repeated ServerInfo servers = 7;
+}
+
+// 玩家注册请求
+message RegisterRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 用户名
+    string username = 2;
+    
+    // 密码（加密后）
+    string password = 3;
+    
+    // 邮箱（可选）
+    string email = 4;
+    
+    // 手机号（可选）
+    string phone = 5;
+    
+    // 验证码
+    string captcha = 6;
+    
+    // 设备信息
+    DeviceInfo device_info = 7;
+    
+    // 邀请码（可选）
+    string invite_code = 8;
+}
+
+// 玩家注册响应
+message RegisterResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 新创建的玩家ID
+    int64 player_id = 4;
+}
+
+// 玩家登出请求
+message LogoutRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 登出原因（可选）
+    string reason = 2;
+}
+
+// 玩家登出响应
+message LogoutResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+}
+
+// 获取玩家信息请求
+message GetPlayerInfoRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 目标玩家ID（可选，不填表示获取自己的信息）
+    int64 target_player_id = 2;
+    
+    // 信息类型掩码（指定需要获取哪些信息）
+    int32 info_mask = 3;
+}
+
+// 获取玩家信息响应
+message GetPlayerInfoResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 玩家信息
+    PlayerInfo player_info = 4;
+}
+
+// 更新玩家信息请求
+message UpdatePlayerInfoRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 要更新的字段
+    PlayerUpdateFields update_fields = 2;
+}
+
+// 更新玩家信息响应
+message UpdatePlayerInfoResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 更新后的玩家信息
+    PlayerInfo player_info = 4;
+}
+
+// 玩家信息结构
+message PlayerInfo {
+    // 玩家ID
+    int64 player_id = 1;
+    
+    // 用户名
+    string username = 2;
+    
+    // 昵称
+    string nickname = 3;
+    
+    // 头像URL
+    string avatar_url = 4;
+    
+    // 等级
+    int32 level = 5;
+    
+    // 经验值
+    int64 experience = 6;
+    
+    // 下一级所需经验
+    int64 next_level_exp = 7;
+    
+    // 金币
+    int64 gold = 8;
+    
+    // 钻石
+    int64 diamond = 9;
+    
+    // 体力
+    int32 energy = 10;
+    
+    // 最大体力
+    int32 max_energy = 11;
+    
+    // 体力恢复时间
+    int64 energy_recover_time = 12;
+    
+    // 玩家状态
+    PlayerStatus status = 13;
+    
+    // 创建时间
+    int64 create_time = 14;
+    
+    // 最后登录时间
+    int64 last_login_time = 15;
+    
+    // 总在线时长（秒）
+    int64 total_online_time = 16;
+    
+    // VIP等级
+    int32 vip_level = 17;
+    
+    // VIP过期时间
+    int64 vip_expire_time = 18;
+    
+    // 公会ID（可选）
+    int64 guild_id = 19;
+    
+    // 公会名称（可选）
+    string guild_name = 20;
+    
+    // 扩展属性
+    map<string, string> properties = 30;
+}
+
+// 玩家更新字段
+message PlayerUpdateFields {
+    // 昵称（可选）
+    string nickname = 1;
+    
+    // 头像URL（可选）
+    string avatar_url = 2;
+    
+    // 签名（可选）
+    string signature = 3;
+    
+    // 性别（可选）
+    Gender gender = 4;
+    
+    // 生日（可选，格式：yyyy-MM-dd）
+    string birthday = 5;
+    
+    // 地区（可选）
+    string region = 6;
+}
+
+// 设备信息
+message DeviceInfo {
+    // 设备ID
+    string device_id = 1;
+    
+    // 设备类型
+    DeviceType device_type = 2;
+    
+    // 操作系统
+    string os = 3;
+    
+    // 操作系统版本
+    string os_version = 4;
+    
+    // 设备型号
+    string device_model = 5;
+    
+    // 应用版本
+    string app_version = 6;
+    
+    // 网络类型
+    string network_type = 7;
+    
+    // IP地址
+    string ip_address = 8;
+}
+
+// 服务器信息
+message ServerInfo {
+    // 服务器ID
+    int32 server_id = 1;
+    
+    // 服务器名称
+    string server_name = 2;
+    
+    // 服务器状态
+    ServerStatus status = 3;
+    
+    // 在线人数
+    int32 online_count = 4;
+    
+    // 最大容量
+    int32 max_capacity = 5;
+    
+    // 服务器地址
+    string server_address = 6;
+    
+    // 服务器端口
+    int32 server_port = 7;
+    
+    // 是否推荐
+    bool recommended = 8;
+}
+
+// 登录方式枚举
+enum LoginType {
+    // 用户名密码登录
+    LOGIN_USERNAME_PASSWORD = 0;
+    
+    // 邮箱登录
+    LOGIN_EMAIL = 1;
+    
+    // 手机号登录
+    LOGIN_PHONE = 2;
+    
+    // 第三方登录（微信）
+    LOGIN_WECHAT = 3;
+    
+    // 第三方登录（QQ）
+    LOGIN_QQ = 4;
+    
+    // 第三方登录（微博）
+    LOGIN_WEIBO = 5;
+    
+    // 游客登录
+    LOGIN_GUEST = 6;
+}
+
+// 玩家状态枚举
+enum PlayerStatus {
+    // 离线
+    PLAYER_OFFLINE = 0;
+    
+    // 在线
+    PLAYER_ONLINE = 1;
+    
+    // 忙碌
+    PLAYER_BUSY = 2;
+    
+    // 离开
+    PLAYER_AWAY = 3;
+    
+    // 隐身
+    PLAYER_INVISIBLE = 4;
+    
+    // 封禁
+    PLAYER_BANNED = 5;
+}
+
+// 设备类型枚举
+enum DeviceType {
+    // 未知设备
+    DEVICE_UNKNOWN = 0;
+    
+    // Android设备
+    DEVICE_ANDROID = 1;
+    
+    // iOS设备
+    DEVICE_IOS = 2;
+    
+    // PC设备
+    DEVICE_PC = 3;
+    
+    // Web浏览器
+    DEVICE_WEB = 4;
+}
+
+// 服务器状态枚举
+enum ServerStatus {
+    // 维护中
+    SERVER_MAINTENANCE = 0;
+    
+    // 正常
+    SERVER_NORMAL = 1;
+    
+    // 繁忙
+    SERVER_BUSY = 2;
+    
+    // 满员
+    SERVER_FULL = 3;
+    
+    // 新服
+    SERVER_NEW = 4;
+}
+
+// 性别枚举
+enum Gender {
+    // 未知
+    GENDER_UNKNOWN = 0;
+    
+    // 男性
+    GENDER_MALE = 1;
+    
+    // 女性
+    GENDER_FEMALE = 2;
+}

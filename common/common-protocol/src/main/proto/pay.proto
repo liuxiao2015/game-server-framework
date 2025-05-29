@@ -1,0 +1,461 @@
+/*
+ * 文件名: pay.proto
+ * 用途: 支付系统消息协议定义
+ * 实现内容:
+ *   - 定义充值和支付相关协议
+ *   - 支持多种支付方式和货币类型
+ *   - 定义订单管理和状态跟踪
+ *   - 支持支付回调和验证机制
+ * 技术选型:
+ *   - Protocol Buffers 3 语法
+ *   - 导入base.proto基础消息
+ *   - 考虑支付安全和数据完整性
+ * 依赖关系:
+ *   - 依赖base.proto基础协议
+ *   - 被支付服务和客户端使用
+ */
+
+syntax = "proto3";
+
+package com.lx.gameserver.protocol.pay;
+
+import "base.proto";
+
+option java_package = "com.lx.gameserver.protocol.pay";
+option java_outer_classname = "PayProto";
+option java_multiple_files = true;
+
+// 创建充值订单请求
+message CreateRechargeOrderRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 商品ID
+    int32 product_id = 2;
+    
+    // 支付方式
+    PaymentMethod payment_method = 3;
+    
+    // 支付金额（分）
+    int32 amount = 4;
+    
+    // 货币类型
+    string currency = 5;
+    
+    // 设备信息
+    string device_info = 6;
+    
+    // 客户端IP
+    string client_ip = 7;
+    
+    // 扩展参数
+    map<string, string> extra_params = 8;
+}
+
+// 创建充值订单响应
+message CreateRechargeOrderResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 订单信息
+    PaymentOrder order = 4;
+    
+    // 支付参数（用于调起支付SDK）
+    PaymentParams payment_params = 5;
+}
+
+// 查询订单状态请求
+message QueryOrderStatusRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 订单号
+    string order_id = 2;
+    
+    // 第三方订单号（可选）
+    string third_party_order_id = 3;
+}
+
+// 查询订单状态响应
+message QueryOrderStatusResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 订单信息
+    PaymentOrder order = 4;
+}
+
+// 支付结果通知
+message PaymentResultNotification {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 订单号
+    string order_id = 2;
+    
+    // 支付状态
+    PaymentStatus payment_status = 3;
+    
+    // 支付结果信息
+    string result_message = 4;
+    
+    // 实际支付金额
+    int32 actual_amount = 5;
+    
+    // 第三方订单号
+    string third_party_order_id = 6;
+    
+    // 第三方交易号
+    string third_party_transaction_id = 7;
+    
+    // 支付完成时间
+    int64 payment_time = 8;
+}
+
+// 获取商品列表请求
+message GetProductListRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 商品类型（可选）
+    ProductType product_type = 2;
+    
+    // 平台类型（可选）
+    PlatformType platform_type = 3;
+}
+
+// 获取商品列表响应
+message GetProductListResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 商品列表
+    repeated Product products = 4;
+}
+
+// 获取充值记录请求
+message GetRechargeHistoryRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 分页参数
+    com.lx.gameserver.protocol.base.PageRequest page_request = 2;
+    
+    // 开始时间（可选）
+    int64 start_time = 3;
+    
+    // 结束时间（可选）
+    int64 end_time = 4;
+    
+    // 支付状态过滤（可选）
+    PaymentStatus status_filter = 5;
+}
+
+// 获取充值记录响应
+message GetRechargeHistoryResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 充值记录列表
+    repeated PaymentOrder orders = 4;
+    
+    // 分页信息
+    com.lx.gameserver.protocol.base.PageResponse page_response = 5;
+}
+
+// 支付订单信息
+message PaymentOrder {
+    // 订单号
+    string order_id = 1;
+    
+    // 玩家ID
+    int64 player_id = 2;
+    
+    // 商品ID
+    int32 product_id = 3;
+    
+    // 商品名称
+    string product_name = 4;
+    
+    // 订单金额（分）
+    int32 order_amount = 5;
+    
+    // 实际支付金额（分）
+    int32 actual_amount = 6;
+    
+    // 货币类型
+    string currency = 7;
+    
+    // 支付方式
+    PaymentMethod payment_method = 8;
+    
+    // 订单状态
+    PaymentStatus status = 9;
+    
+    // 第三方订单号
+    string third_party_order_id = 10;
+    
+    // 第三方交易号
+    string third_party_transaction_id = 11;
+    
+    // 创建时间
+    int64 create_time = 12;
+    
+    // 支付时间
+    int64 payment_time = 13;
+    
+    // 过期时间
+    int64 expire_time = 14;
+    
+    // 订单描述
+    string description = 15;
+    
+    // 设备信息
+    string device_info = 16;
+    
+    // 客户端IP
+    string client_ip = 17;
+    
+    // 服务器ID
+    int32 server_id = 18;
+    
+    // 扩展参数
+    map<string, string> extra_params = 19;
+}
+
+// 商品信息
+message Product {
+    // 商品ID
+    int32 product_id = 1;
+    
+    // 商品名称
+    string product_name = 2;
+    
+    // 商品描述
+    string description = 3;
+    
+    // 商品类型
+    ProductType product_type = 4;
+    
+    // 商品价格（分）
+    int32 price = 5;
+    
+    // 原价（用于显示折扣，分）
+    int32 original_price = 6;
+    
+    // 货币类型
+    string currency = 7;
+    
+    // 商品内容（奖励的游戏币数量等）
+    ProductContent content = 8;
+    
+    // 平台类型限制
+    repeated PlatformType supported_platforms = 9;
+    
+    // 支付方式限制
+    repeated PaymentMethod supported_payment_methods = 10;
+    
+    // 是否可用
+    bool available = 11;
+    
+    // 每日购买限制（0表示无限制）
+    int32 daily_limit = 12;
+    
+    // 总购买限制（0表示无限制）
+    int32 total_limit = 13;
+    
+    // 排序权重
+    int32 sort_weight = 14;
+    
+    // 商品图标
+    string icon_url = 15;
+}
+
+// 商品内容
+message ProductContent {
+    // 获得的钻石数量
+    int32 diamonds = 1;
+    
+    // 获得的金币数量
+    int64 gold = 2;
+    
+    // 获得的VIP经验
+    int32 vip_exp = 3;
+    
+    // 额外奖励物品
+    repeated ItemReward bonus_items = 4;
+    
+    // 首次购买奖励
+    repeated ItemReward first_time_bonus = 5;
+}
+
+// 物品奖励
+message ItemReward {
+    // 物品ID
+    int32 item_id = 1;
+    
+    // 物品数量
+    int32 quantity = 2;
+    
+    // 是否绑定
+    bool bound = 3;
+}
+
+// 支付参数
+message PaymentParams {
+    // 支付方式
+    PaymentMethod payment_method = 1;
+    
+    // 第三方应用ID
+    string app_id = 2;
+    
+    // 商户ID
+    string merchant_id = 3;
+    
+    // 订单号
+    string order_id = 4;
+    
+    // 支付金额（分）
+    int32 amount = 5;
+    
+    // 商品描述
+    string subject = 6;
+    
+    // 回调URL
+    string notify_url = 7;
+    
+    // 返回URL
+    string return_url = 8;
+    
+    // 签名
+    string sign = 9;
+    
+    // 时间戳
+    int64 timestamp = 10;
+    
+    // 扩展参数
+    map<string, string> extra_params = 11;
+}
+
+// 支付方式枚举
+enum PaymentMethod {
+    // 未知支付方式
+    PAYMENT_METHOD_UNKNOWN = 0;
+    
+    // 支付宝
+    PAYMENT_METHOD_ALIPAY = 1;
+    
+    // 微信支付
+    PAYMENT_METHOD_WECHAT = 2;
+    
+    // 银联支付
+    PAYMENT_METHOD_UNIONPAY = 3;
+    
+    // Apple内购
+    PAYMENT_METHOD_APPLE_IAP = 4;
+    
+    // Google Play内购
+    PAYMENT_METHOD_GOOGLE_PLAY = 5;
+    
+    // PayPal
+    PAYMENT_METHOD_PAYPAL = 6;
+    
+    // 信用卡
+    PAYMENT_METHOD_CREDIT_CARD = 7;
+    
+    // 游戏点卡
+    PAYMENT_METHOD_GAME_CARD = 8;
+}
+
+// 支付状态枚举
+enum PaymentStatus {
+    // 订单创建
+    PAYMENT_STATUS_CREATED = 0;
+    
+    // 等待支付
+    PAYMENT_STATUS_PENDING = 1;
+    
+    // 支付中
+    PAYMENT_STATUS_PROCESSING = 2;
+    
+    // 支付成功
+    PAYMENT_STATUS_SUCCESS = 3;
+    
+    // 支付失败
+    PAYMENT_STATUS_FAILED = 4;
+    
+    // 支付取消
+    PAYMENT_STATUS_CANCELLED = 5;
+    
+    // 订单过期
+    PAYMENT_STATUS_EXPIRED = 6;
+    
+    // 退款中
+    PAYMENT_STATUS_REFUNDING = 7;
+    
+    // 已退款
+    PAYMENT_STATUS_REFUNDED = 8;
+}
+
+// 商品类型枚举
+enum ProductType {
+    // 钻石充值
+    PRODUCT_TYPE_DIAMOND = 0;
+    
+    // 月卡
+    PRODUCT_TYPE_MONTHLY_CARD = 1;
+    
+    // 礼包
+    PRODUCT_TYPE_GIFT_PACK = 2;
+    
+    // VIP特权
+    PRODUCT_TYPE_VIP = 3;
+    
+    // 道具
+    PRODUCT_TYPE_ITEM = 4;
+    
+    // 限时优惠
+    PRODUCT_TYPE_LIMITED_OFFER = 5;
+}
+
+// 平台类型枚举
+enum PlatformType {
+    // 未知平台
+    PLATFORM_TYPE_UNKNOWN = 0;
+    
+    // Android平台
+    PLATFORM_TYPE_ANDROID = 1;
+    
+    // iOS平台
+    PLATFORM_TYPE_IOS = 2;
+    
+    // PC平台
+    PLATFORM_TYPE_PC = 3;
+    
+    // Web平台
+    PLATFORM_TYPE_WEB = 4;
+}

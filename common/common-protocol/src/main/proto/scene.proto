@@ -1,0 +1,508 @@
+/*
+ * 文件名: scene.proto
+ * 用途: 场景系统消息协议定义
+ * 实现内容:
+ *   - 定义场景进入和退出协议
+ *   - 定义玩家移动和位置同步
+ *   - 定义场景内对象和事件广播
+ *   - 支持场景内玩家交互功能
+ * 技术选型:
+ *   - Protocol Buffers 3 语法
+ *   - 导入base.proto基础消息
+ *   - 优化实时性能和带宽占用
+ * 依赖关系:
+ *   - 依赖base.proto基础协议
+ *   - 被场景服务和客户端使用
+ */
+
+syntax = "proto3";
+
+package com.lx.gameserver.protocol.scene;
+
+import "base.proto";
+
+option java_package = "com.lx.gameserver.protocol.scene";
+option java_outer_classname = "SceneProto";
+option java_multiple_files = true;
+
+// 进入场景请求
+message EnterSceneRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 目标场景ID
+    int32 scene_id = 2;
+    
+    // 进入点ID（可选，不指定则使用默认进入点）
+    int32 entry_point_id = 3;
+    
+    // 进入方式
+    EnterType enter_type = 4;
+    
+    // 来源场景ID（切换场景时使用）
+    int32 from_scene_id = 5;
+}
+
+// 进入场景响应
+message EnterSceneResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 场景信息
+    SceneInfo scene_info = 4;
+    
+    // 玩家在场景中的初始位置
+    Position initial_position = 5;
+    
+    // 场景内其他玩家列表
+    repeated ScenePlayer other_players = 6;
+    
+    // 场景内NPC列表
+    repeated SceneNpc npcs = 7;
+    
+    // 场景内物品列表
+    repeated SceneItem items = 8;
+}
+
+// 离开场景请求
+message LeaveSceneRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 离开原因
+    LeaveType leave_type = 2;
+}
+
+// 离开场景响应
+message LeaveSceneResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+}
+
+// 玩家移动请求
+message PlayerMoveRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 目标位置
+    Position target_position = 2;
+    
+    // 移动路径（可选，用于路径验证）
+    repeated Position path = 3;
+    
+    // 移动速度
+    float move_speed = 4;
+    
+    // 移动时间戳
+    int64 move_timestamp = 5;
+}
+
+// 玩家移动响应
+message PlayerMoveResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 服务器确认的位置
+    Position confirmed_position = 4;
+    
+    // 服务器时间戳
+    int64 server_timestamp = 5;
+}
+
+// 场景内移动广播
+message SceneMoveBroadcast {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 移动的玩家ID
+    int64 player_id = 2;
+    
+    // 当前位置
+    Position current_position = 3;
+    
+    // 目标位置
+    Position target_position = 4;
+    
+    // 移动速度
+    float move_speed = 5;
+    
+    // 移动开始时间
+    int64 move_start_time = 6;
+}
+
+// 玩家进入场景广播
+message PlayerEnterSceneBroadcast {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 进入的玩家信息
+    ScenePlayer player = 2;
+}
+
+// 玩家离开场景广播
+message PlayerLeaveSceneBroadcast {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 离开的玩家ID
+    int64 player_id = 2;
+    
+    // 离开原因
+    LeaveType leave_type = 3;
+}
+
+// 场景内对象同步
+message SceneObjectSync {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 同步类型
+    SyncType sync_type = 2;
+    
+    // 对象信息
+    oneof object_info {
+        ScenePlayer player = 3;
+        SceneNpc npc = 4;
+        SceneItem item = 5;
+        SceneEffect effect = 6;
+    }
+}
+
+// 获取场景信息请求
+message GetSceneInfoRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 场景ID
+    int32 scene_id = 2;
+}
+
+// 获取场景信息响应
+message GetSceneInfoResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 场景信息
+    SceneInfo scene_info = 4;
+}
+
+// 场景信息
+message SceneInfo {
+    // 场景ID
+    int32 scene_id = 1;
+    
+    // 场景名称
+    string scene_name = 2;
+    
+    // 场景类型
+    SceneType scene_type = 3;
+    
+    // 场景状态
+    SceneStatus scene_status = 4;
+    
+    // 当前玩家数量
+    int32 current_players = 5;
+    
+    // 最大玩家容量
+    int32 max_capacity = 6;
+    
+    // 场景尺寸
+    SceneSize scene_size = 7;
+    
+    // 场景配置
+    map<string, string> scene_config = 8;
+    
+    // 创建时间
+    int64 create_time = 9;
+}
+
+// 场景中的玩家
+message ScenePlayer {
+    // 玩家ID
+    int64 player_id = 1;
+    
+    // 玩家名称
+    string player_name = 2;
+    
+    // 玩家等级
+    int32 level = 3;
+    
+    // 当前位置
+    Position position = 4;
+    
+    // 朝向角度
+    float direction = 5;
+    
+    // 移动状态
+    MoveState move_state = 6;
+    
+    // 玩家状态
+    PlayerState player_state = 7;
+    
+    // 头像
+    string avatar = 8;
+    
+    // VIP等级
+    int32 vip_level = 9;
+    
+    // 公会名称
+    string guild_name = 10;
+}
+
+// 场景中的NPC
+message SceneNpc {
+    // NPC ID
+    int64 npc_id = 1;
+    
+    // NPC配置ID
+    int32 npc_config_id = 2;
+    
+    // NPC名称
+    string npc_name = 3;
+    
+    // 当前位置
+    Position position = 4;
+    
+    // 朝向角度
+    float direction = 5;
+    
+    // NPC状态
+    NpcState npc_state = 6;
+    
+    // NPC等级
+    int32 level = 7;
+    
+    // 当前血量
+    int32 current_hp = 8;
+    
+    // 最大血量
+    int32 max_hp = 9;
+}
+
+// 场景中的物品
+message SceneItem {
+    // 物品实例ID
+    int64 item_instance_id = 1;
+    
+    // 物品配置ID
+    int32 item_config_id = 2;
+    
+    // 物品名称
+    string item_name = 3;
+    
+    // 物品位置
+    Position position = 4;
+    
+    // 物品数量
+    int32 quantity = 5;
+    
+    // 掉落时间
+    int64 drop_time = 6;
+    
+    // 归属玩家ID（可选）
+    int64 owner_player_id = 7;
+    
+    // 拾取保护时间
+    int64 pickup_protect_time = 8;
+}
+
+// 场景特效
+message SceneEffect {
+    // 特效ID
+    int64 effect_id = 1;
+    
+    // 特效配置ID
+    int32 effect_config_id = 2;
+    
+    // 特效位置
+    Position position = 3;
+    
+    // 特效持续时间（毫秒）
+    int32 duration = 4;
+    
+    // 开始时间
+    int64 start_time = 5;
+    
+    // 特效参数
+    map<string, string> parameters = 6;
+}
+
+// 位置信息
+message Position {
+    // X坐标
+    float x = 1;
+    
+    // Y坐标
+    float y = 2;
+    
+    // Z坐标（可选，2D游戏可忽略）
+    float z = 3;
+}
+
+// 场景尺寸
+message SceneSize {
+    // 宽度
+    float width = 1;
+    
+    // 高度
+    float height = 2;
+}
+
+// 进入场景方式枚举
+enum EnterType {
+    // 正常进入
+    ENTER_TYPE_NORMAL = 0;
+    
+    // 传送进入
+    ENTER_TYPE_TELEPORT = 1;
+    
+    // 复活进入
+    ENTER_TYPE_REVIVE = 2;
+    
+    // 登录进入
+    ENTER_TYPE_LOGIN = 3;
+    
+    // 切换线路
+    ENTER_TYPE_SWITCH_LINE = 4;
+}
+
+// 离开场景方式枚举
+enum LeaveType {
+    // 正常离开
+    LEAVE_TYPE_NORMAL = 0;
+    
+    // 传送离开
+    LEAVE_TYPE_TELEPORT = 1;
+    
+    // 掉线离开
+    LEAVE_TYPE_DISCONNECT = 2;
+    
+    // 被踢出
+    LEAVE_TYPE_KICKED = 3;
+    
+    // 死亡离开
+    LEAVE_TYPE_DEATH = 4;
+}
+
+// 场景类型枚举
+enum SceneType {
+    // 普通场景
+    SCENE_TYPE_NORMAL = 0;
+    
+    // 副本场景
+    SCENE_TYPE_DUNGEON = 1;
+    
+    // PVP场景
+    SCENE_TYPE_PVP = 2;
+    
+    // 主城场景
+    SCENE_TYPE_CITY = 3;
+    
+    // 野外场景
+    SCENE_TYPE_FIELD = 4;
+}
+
+// 场景状态枚举
+enum SceneStatus {
+    // 正常运行
+    SCENE_STATUS_NORMAL = 0;
+    
+    // 准备中
+    SCENE_STATUS_PREPARING = 1;
+    
+    // 已满员
+    SCENE_STATUS_FULL = 2;
+    
+    // 维护中
+    SCENE_STATUS_MAINTENANCE = 3;
+    
+    // 关闭中
+    SCENE_STATUS_CLOSING = 4;
+}
+
+// 移动状态枚举
+enum MoveState {
+    // 静止
+    MOVE_STATE_IDLE = 0;
+    
+    // 移动中
+    MOVE_STATE_MOVING = 1;
+    
+    // 跑步
+    MOVE_STATE_RUNNING = 2;
+    
+    // 传送中
+    MOVE_STATE_TELEPORTING = 3;
+}
+
+// 玩家状态枚举
+enum PlayerState {
+    // 正常状态
+    PLAYER_STATE_NORMAL = 0;
+    
+    // 战斗状态
+    PLAYER_STATE_COMBAT = 1;
+    
+    // 死亡状态
+    PLAYER_STATE_DEAD = 2;
+    
+    // 交易状态
+    PLAYER_STATE_TRADING = 3;
+    
+    // AFK状态
+    PLAYER_STATE_AFK = 4;
+}
+
+// NPC状态枚举
+enum NpcState {
+    // 空闲状态
+    NPC_STATE_IDLE = 0;
+    
+    // 巡逻状态
+    NPC_STATE_PATROL = 1;
+    
+    // 战斗状态
+    NPC_STATE_COMBAT = 2;
+    
+    // 死亡状态
+    NPC_STATE_DEAD = 3;
+    
+    // 返回状态
+    NPC_STATE_RETURNING = 4;
+}
+
+// 同步类型枚举
+enum SyncType {
+    // 新增对象
+    SYNC_TYPE_ADD = 0;
+    
+    // 更新对象
+    SYNC_TYPE_UPDATE = 1;
+    
+    // 删除对象
+    SYNC_TYPE_REMOVE = 2;
+}
