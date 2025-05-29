@@ -127,7 +127,7 @@ public abstract class Actor {
      *
      * @param state 新状态
      */
-    final void setState(ActorState state) {
+    public final void setState(ActorState state) {
         this.state = state;
         logger.debug("Actor[{}] 状态变更为: {}", actorId, state);
     }
