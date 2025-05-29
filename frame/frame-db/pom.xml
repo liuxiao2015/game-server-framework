@@ -119,6 +119,13 @@
             <scope>runtime</scope>
         </dependency>
         
+        <!-- Spring Web (for servlet support) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
         <!-- 测试框架 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

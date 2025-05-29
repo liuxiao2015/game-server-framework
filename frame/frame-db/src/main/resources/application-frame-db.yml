@@ -1,0 +1,279 @@
+# 游戏服务器数据库配置示例
+# 用途: frame-db模块的完整配置示例
+# 包含: 数据源配置、连接池参数、MyBatis Plus配置、分库分表配置、监控配置等
+
+spring:
+  # 环境配置
+  profiles:
+    active: dev  # dev, test, prod
+  
+  # 数据源配置（主要用于兼容Spring Boot自动配置）
+  datasource:
+    url: jdbc:h2:mem:gamedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    
+  # H2控制台配置（开发环境）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+# 游戏数据库配置
+game:
+  database:
+    # 是否启用数据库功能
+    enabled: true
+    
+    # 主数据源配置
+    master:
+      url: jdbc:mysql://localhost:3306/gamedb_master?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      username: game_user
+      password: game_password
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      weight: 1
+      enabled: true
+    
+    # 从数据源配置列表
+    slaves:
+      - url: jdbc:mysql://localhost:3307/gamedb_slave1?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+        username: game_user
+        password: game_password  
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        weight: 1
+        enabled: true
+      - url: jdbc:mysql://localhost:3308/gamedb_slave2?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+        username: game_user
+        password: game_password
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        weight: 2
+        enabled: true
+    
+    # 连接池配置
+    pool:
+      # 最大连接数
+      maximum-pool-size: 30
+      # 最小空闲连接数
+      minimum-idle: 5
+      # 连接超时时间（毫秒）
+      connection-timeout: 30000
+      # 空闲超时时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大生命周期（毫秒）
+      max-lifetime: 1800000
+      # 连接泄露检测阈值（毫秒，0表示禁用）
+      leak-detection-threshold: 60000
+      # 验证查询
+      validation-query: SELECT 1
+      # 是否开启预编译语句缓存
+      cache-prep-stmts: true
+      # 预编译语句缓存大小
+      prep-stmt-cache-size: 250
+      # 预编译语句最大长度
+      prep-stmt-cache-sql-limit: 2048
+      # 是否使用服务器端预编译语句
+      use-server-prep-stmts: true
+      # 是否重写批量语句
+      rewrite-batched-statements: true
+    
+    # 分库分表配置
+    sharding:
+      # 是否启用分库分表
+      enabled: false
+      # 数据库分片数量
+      database-sharding-count: 2
+      # 表分片数量  
+      table-sharding-count: 4
+      # 分片算法类型
+      sharding-algorithm: mod
+    
+    # 监控配置
+    monitor:
+      # 慢查询阈值（毫秒）
+      slow-query-threshold: 1000
+      # 指标采集间隔（秒）
+      metrics-collection-interval: 30
+
+# MyBatis Plus配置
+mybatis-plus:
+  # 配置文件位置
+  config-location: classpath:mybatis-config.xml
+  # Mapper文件位置
+  mapper-locations: classpath*:mapper/**/*.xml
+  # 实体扫描包
+  type-aliases-package: com.lx.gameserver.*.entity
+  
+  # 全局配置
+  global-config:
+    # 数据库字段下划线转驼峰
+    db-column-underline: true
+    # 刷新Mapper
+    refresh-mapper: true
+    # 元数据处理器
+    meta-object-handler: com.lx.gameserver.frame.db.base.GameMetaObjectHandler
+    
+    # 数据库配置
+    db-config:
+      # 主键类型（雪花算法）
+      id-type: ASSIGN_ID
+      # 表名前缀
+      table-prefix: t_
+      # 字段策略
+      field-strategy: NOT_EMPTY
+      # 逻辑删除字段
+      logic-delete-field: deleted
+      # 逻辑删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+  
+  # 配置
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 缓存启用
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    # 开启二级缓存
+    local-cache-scope: statement
+    # 日志实现
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# 日志配置
+logging:
+  level:
+    # MyBatis SQL日志
+    com.lx.gameserver.frame.db.mapper: DEBUG
+    # 连接池日志
+    com.zaxxer.hikari: INFO
+    # 分片日志
+    org.apache.shardingsphere: INFO
+    # 根日志级别
+    root: INFO
+  
+  # 日志格式
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# 管理端点配置（用于监控）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+game:
+  database:
+    # 开发环境使用H2内存数据库
+    master:
+      url: jdbc:h2:mem:gamedb_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+      username: sa
+      password: 
+      driver-class-name: org.h2.Driver
+    
+    # 开发环境不使用从库
+    slaves: []
+    
+    # 开发环境连接池配置
+    pool:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      
+    # 开发环境不启用分库分表
+    sharding:
+      enabled: false
+      
+    # 开发环境监控配置
+    monitor:
+      slow-query-threshold: 500
+
+# 开发环境日志级别更详细
+logging:
+  level:
+    com.lx.gameserver.frame.db: DEBUG
+    org.springframework.jdbc: DEBUG
+
+---
+# 测试环境配置
+spring:
+  config:
+    activate:
+      on-profile: test
+
+game:
+  database:
+    master:
+      url: jdbc:mysql://test-mysql:3306/gamedb_test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      username: test_user
+      password: test_password
+      
+    pool:
+      maximum-pool-size: 20
+      minimum-idle: 3
+      
+    monitor:
+      slow-query-threshold: 800
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+game:
+  database:
+    master:
+      url: jdbc:mysql://prod-mysql-master:3306/gamedb_prod?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai
+      username: ${DB_USERNAME:prod_user}
+      password: ${DB_PASSWORD:prod_password}
+      
+    slaves:
+      - url: jdbc:mysql://prod-mysql-slave1:3306/gamedb_prod?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai
+        username: ${DB_USERNAME:prod_user}
+        password: ${DB_PASSWORD:prod_password}
+        weight: 1
+      - url: jdbc:mysql://prod-mysql-slave2:3306/gamedb_prod?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai
+        username: ${DB_USERNAME:prod_user}
+        password: ${DB_PASSWORD:prod_password}
+        weight: 2
+        
+    pool:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      leak-detection-threshold: 60000
+      
+    # 生产环境启用分库分表
+    sharding:
+      enabled: true
+      database-sharding-count: 4
+      table-sharding-count: 8
+      
+    monitor:
+      slow-query-threshold: 2000
+
+# 生产环境日志级别
+logging:
+  level:
+    com.lx.gameserver.frame.db: INFO
+    root: WARN
