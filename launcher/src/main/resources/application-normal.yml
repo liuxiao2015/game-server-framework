@@ -1,0 +1,217 @@
+#
+# 文件名: application-normal.yml
+# 用途: 游戏服务器框架生产环境配置文件
+# 内容: 
+#   - 生产环境数据库配置（MySQL集群）
+#   - 生产环境缓存配置（Redis集群）
+#   - 生产环境性能优化配置
+#   - 生产环境安全和监控配置
+# 技术选型: 
+#   - MySQL主从集群
+#   - Redis集群或哨兵模式
+#   - 生产级连接池配置
+# 依赖关系: 
+#   - 继承主配置文件application.yml
+#   - 用于生产部署环境
+#
+
+# 生产环境标识
+spring:
+  config:
+    activate:
+      on-profile: normal
+
+# 数据库配置 - 生产环境使用MySQL集群
+  datasource:
+    # 数据库连接URL（生产环境应配置为实际的数据库地址）
+    url: jdbc:mysql://mysql-cluster:3306/game_server_prod?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=false
+    # 数据库用户名（生产环境应使用专用账号）
+    username: ${DB_USERNAME:gameserver}
+    # 数据库密码（生产环境应从环境变量获取）
+    password: ${DB_PASSWORD:your_secure_password}
+    # 数据库驱动
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 连接池配置 - 生产环境优化
+    hikari:
+      # 最大连接数（生产环境增大）
+      maximum-pool-size: 50
+      # 最小空闲连接数
+      minimum-idle: 10
+      # 连接超时时间（毫秒）
+      connection-timeout: 30000
+      # 空闲超时时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大生命周期（毫秒）
+      max-lifetime: 1800000
+      # 连接测试查询
+      connection-test-query: SELECT 1
+      # 连接泄漏检测时间
+      leak-detection-threshold: 60000
+      # 连接池名称
+      pool-name: GameServerHikariCP
+
+# Redis配置 - 生产环境使用Redis集群
+  data:
+    redis:
+      # Redis集群配置
+      cluster:
+        # 集群节点列表
+        nodes:
+          - redis-node1:7001
+          - redis-node1:7002
+          - redis-node2:7001
+          - redis-node2:7002
+          - redis-node3:7001
+          - redis-node3:7002
+        # 最大重定向次数
+        max-redirects: 3
+      # Redis密码（生产环境必须设置）
+      password: ${REDIS_PASSWORD:your_redis_password}
+      # 连接超时时间
+      timeout: 5000ms
+      # 连接池配置
+      jedis:
+        pool:
+          # 连接池最大连接数
+          max-active: 100
+          # 连接池最大空闲连接数
+          max-idle: 20
+          # 连接池最小空闲连接数
+          min-idle: 10
+          # 连接池最大等待时间
+          max-wait: 3000ms
+
+# JPA/Hibernate配置 - 生产环境
+  jpa:
+    # 数据库方言
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    # Hibernate配置
+    hibernate:
+      # DDL自动执行策略（生产环境使用validate）
+      ddl-auto: validate
+      # 命名策略
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    # 生产环境不显示SQL
+    show-sql: false
+    # 性能优化配置
+    properties:
+      hibernate:
+        # 关闭SQL格式化
+        format_sql: false
+        # 启用查询缓存
+        cache:
+          use_query_cache: true
+          use_second_level_cache: true
+        # 批处理大小
+        jdbc:
+          batch_size: 50
+          fetch_size: 50
+
+# 开发工具配置 - 生产环境禁用
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+# 服务器配置 - 生产环境
+server:
+  # 生产环境端口
+  port: ${SERVER_PORT:8080}
+  # 性能优化配置
+  tomcat:
+    # 线程配置
+    threads:
+      max: 500
+      min-spare: 50
+    # 连接配置
+    max-connections: 10000
+    accept-count: 200
+    # 压缩配置
+    compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+      min-response-size: 1024
+
+# 日志配置 - 生产环境
+logging:
+  level:
+    # 根日志级别
+    root: WARN
+    # 项目日志级别（生产环境使用INFO）
+    com.lx.gameserver: INFO
+    # Spring框架日志
+    org.springframework: WARN
+    # 禁用SQL日志
+    org.hibernate.SQL: WARN
+  # 日志文件配置
+  file:
+    name: /var/log/game-server/game-server.log
+    max-size: 500MB
+    max-history: 90
+  # 异步日志配置
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true
+      max-file-size: 500MB
+      total-size-cap: 10GB
+
+# 健康检查配置 - 生产环境
+management:
+  server:
+    # 健康检查端口（可与主服务端口分离）
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        # 生产环境只暴露必要端点
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      # 生产环境隐藏详细信息
+      show-details: when-authorized
+      show-components: when-authorized
+  # 安全配置
+  security:
+    enabled: true
+
+# 应用信息 - 生产环境
+info:
+  environment: 生产环境
+  database: MySQL集群
+  cache: Redis集群
+  features:
+    - 高可用部署
+    - 集群数据库
+    - 集群缓存
+    - 性能优化
+    - 安全加固
+
+# 自定义应用配置
+app:
+  # 业务配置
+  game:
+    # 最大玩家连接数
+    max-players: 10000
+    # 服务器ID
+    server-id: ${SERVER_ID:1}
+    # 区域ID
+    region-id: ${REGION_ID:1}
+  
+  # 安全配置
+  security:
+    # 启用安全模式
+    enabled: true
+    # JWT密钥
+    jwt-secret: ${JWT_SECRET:your_jwt_secret_key}
+    # Token过期时间（小时）
+    token-expiration: 24
+  
+  # 监控配置
+  monitoring:
+    # 启用监控
+    enabled: true
+    # 监控数据保留天数
+    retention-days: 30

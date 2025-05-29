@@ -1,15 +1,86 @@
-# 游戏服务器框架应用配置文件
+#
+# 文件名: application.yml
+# 用途: 游戏服务器框架主配置文件
+# 内容: 
+#   - 服务器基础配置（端口、应用名称等）
+#   - Spring框架核心配置
+#   - 健康检查和监控配置
+#   - 通用日志配置
+# 技术选型: 
+#   - Spring Boot配置体系
+#   - YAML配置格式
+#   - Spring Actuator监控
+# 依赖关系: 
+#   - 被不同环境的配置文件继承
+#   - 与具体环境配置文件（dev/normal）组合使用
+#
+
+# 服务器配置
 server:
   port: 8080
+  servlet:
+    context-path: /
+  # 连接超时配置
+  connection-timeout: 20000
+  # 线程配置
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
 
+# Spring框架配置
 spring:
   application:
     name: game-server-framework
+  # 默认激活开发环境配置
   profiles:
     active: dev
+  # 主配置
+  main:
+    banner-mode: console
+    allow-bean-definition-overriding: true
+
+# 健康检查和监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露健康检查和信息端点
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      # 显示健康检查详细信息
+      show-details: always
+      show-components: always
+  health:
+    # 启用磁盘空间检查
+    diskspace:
+      enabled: true
+      threshold: 10MB
 
 # 日志配置
 logging:
   level:
     root: INFO
     com.lx.gameserver: DEBUG
+    # Spring相关日志级别
+    org.springframework: INFO
+    # Actuator日志级别
+    org.springframework.boot.actuate: INFO
+  # 日志格式配置
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 应用信息配置
+info:
+  app:
+    name: 游戏服务器框架
+    description: 高性能分布式游戏服务器框架
+    version: 1.0.0-SNAPSHOT
+    author: Liu Xiao
+  java:
+    version: ${java.version}
+  build:
+    time: ${maven.build.timestamp}
