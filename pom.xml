@@ -39,9 +39,7 @@
         <module>launcher</module>
         
         <!-- 公共模块 -->
-        <module>common/common-core</module>
-        <module>common/common-protocol</module>
-        <module>common/common-api</module>
+        <module>common</module>
         
         <!-- 框架模块 -->
         <module>frame/frame-network</module>
