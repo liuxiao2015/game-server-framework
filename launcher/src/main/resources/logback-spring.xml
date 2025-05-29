@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  文件名: logback-spring.xml
+  用途: 游戏服务器框架日志配置文件
+  内容: 
+    - 控制台日志输出配置
+    - 文件日志输出配置
+    - 不同环境的日志级别配置
+    - 日志滚动和归档策略
+  技术选型: 
+    - Logback日志框架
+    - Spring Boot集成的日志配置
+    - 支持多环境配置
+  依赖关系: 
+    - 与Spring Boot日志系统集成
+    - 支持dev和normal环境差异化配置
+-->
+<configuration>
+    <!-- Spring Boot日志转换器 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    
+    <!-- 定义日志文件存储路径 -->
+    <springProfile name="dev">
+        <property name="LOG_PATH" value="logs"/>
+    </springProfile>
+    <springProfile name="normal">
+        <property name="LOG_PATH" value="logs/production"/>
+    </springProfile>
+    
+    <!-- 定义日志文件名称 -->
+    <property name="LOG_FILE" value="game-server"/>
+    
+    <!-- 定义日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"/>
+    
+    <property name="FILE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${PID:- } --- [%t] %-40.40logger{39} : %m%n%wEx"/>
+
+    <!-- 控制台输出配置 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- 开发环境输出所有级别，生产环境输出INFO及以上级别 -->
+        <springProfile name="dev">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>DEBUG</level>
+            </filter>
+        </springProfile>
+        <springProfile name="normal">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+        </springProfile>
+    </appender>
+
+    <!-- 文件输出配置 - 所有日志 -->
+    <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        
+        <!-- 滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 文件名模式 -->
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- 单个文件最大大小 -->
+            <springProfile name="dev">
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>5GB</totalSizeCap>
+            </springProfile>
+            <springProfile name="normal">
+                <maxFileSize>500MB</maxFileSize>
+                <maxHistory>90</maxHistory>
+                <totalSizeCap>20GB</totalSizeCap>
+            </springProfile>
+        </rollingPolicy>
+        
+        <!-- 启动时清理历史文件 -->
+        <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </appender>
+
+    <!-- 错误日志单独输出 -->
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}-error.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        
+        <!-- 只输出ERROR级别日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        
+        <!-- 滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <springProfile name="dev">
+                <maxFileSize>50MB</maxFileSize>
+                <maxHistory>60</maxHistory>
+                <totalSizeCap>2GB</totalSizeCap>
+            </springProfile>
+            <springProfile name="normal">
+                <maxFileSize>200MB</maxFileSize>
+                <maxHistory>180</maxHistory>
+                <totalSizeCap>10GB</totalSizeCap>
+            </springProfile>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 异步日志配置（生产环境） -->
+    <springProfile name="normal">
+        <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+            <discardingThreshold>0</discardingThreshold>
+            <queueSize>1024</queueSize>
+            <includeCallerData>false</includeCallerData>
+            <appender-ref ref="FILE_ALL"/>
+        </appender>
+        
+        <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+            <discardingThreshold>0</discardingThreshold>
+            <queueSize>256</queueSize>
+            <includeCallerData>true</includeCallerData>
+            <appender-ref ref="FILE_ERROR"/>
+        </appender>
+    </springProfile>
+
+    <!-- 具体Logger配置 -->
+    
+    <!-- 项目日志配置 -->
+    <logger name="com.lx.gameserver" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <springProfile name="dev">
+            <appender-ref ref="FILE_ALL"/>
+            <appender-ref ref="FILE_ERROR"/>
+        </springProfile>
+        <springProfile name="normal">
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+        </springProfile>
+    </logger>
+
+    <!-- Spring框架日志配置 -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    
+    <!-- 开发环境下Spring Boot启动日志 -->
+    <springProfile name="dev">
+        <logger name="org.springframework.boot" level="INFO"/>
+    </springProfile>
+    
+    <!-- 生产环境下减少Spring日志输出 -->
+    <springProfile name="normal">
+        <logger name="org.springframework.boot" level="WARN"/>
+    </springProfile>
+
+    <!-- Actuator健康检查日志 -->
+    <logger name="org.springframework.boot.actuator" level="INFO"/>
+    
+    <!-- 数据库连接池日志 -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    
+    <!-- Redis日志 -->
+    <logger name="io.lettuce" level="INFO"/>
+    <logger name="org.springframework.data.redis" level="INFO"/>
+
+    <!-- 第三方库日志级别控制 -->
+    <logger name="io.netty" level="INFO"/>
+    <logger name="org.apache.dubbo" level="INFO"/>
+    <logger name="com.google.protobuf" level="WARN"/>
+
+    <!-- 根Logger配置 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <springProfile name="dev">
+            <appender-ref ref="FILE_ALL"/>
+            <appender-ref ref="FILE_ERROR"/>
+        </springProfile>
+        <springProfile name="normal">
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+        </springProfile>
+    </root>
+
+</configuration>

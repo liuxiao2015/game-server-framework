@@ -1,0 +1,149 @@
+#
+# 文件名: application-dev.yml
+# 用途: 游戏服务器框架开发环境配置文件
+# 内容: 
+#   - 开发环境专用数据库配置（MySQL单体）
+#   - 开发环境缓存配置（内嵌Redis）
+#   - 开发调试相关配置
+#   - 开发环境日志配置
+# 技术选型: 
+#   - MySQL单体数据库
+#   - 内嵌Redis缓存
+#   - 开发工具集成
+# 依赖关系: 
+#   - 继承主配置文件application.yml
+#   - 用于本地开发和测试环境
+#
+
+# 开发环境标识
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+# 数据库配置 - 开发环境使用MySQL单体数据库
+  datasource:
+    # 数据库连接URL
+    url: jdbc:mysql://localhost:3306/game_server_dev?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    # 数据库用户名
+    username: root
+    # 数据库密码
+    password: 123456
+    # 数据库驱动
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 连接池配置
+    hikari:
+      # 最大连接数
+      maximum-pool-size: 10
+      # 最小空闲连接数
+      minimum-idle: 5
+      # 连接超时时间（毫秒）
+      connection-timeout: 30000
+      # 空闲超时时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大生命周期（毫秒）
+      max-lifetime: 1800000
+      # 连接测试查询
+      connection-test-query: SELECT 1
+
+# Redis配置 - 开发环境使用内嵌Redis或本地Redis
+  data:
+    redis:
+      # Redis服务器地址
+      host: localhost
+      # Redis服务器端口
+      port: 6379
+      # Redis数据库索引（默认为0）
+      database: 0
+      # Redis密码（开发环境通常不设密码）
+      password: 
+      # 连接超时时间
+      timeout: 5000ms
+      # 连接池配置
+      jedis:
+        pool:
+          # 连接池最大连接数
+          max-active: 20
+          # 连接池最大空闲连接数
+          max-idle: 10
+          # 连接池最小空闲连接数
+          min-idle: 5
+          # 连接池最大等待时间
+          max-wait: 2000ms
+
+# JPA/Hibernate配置 - 开发环境
+  jpa:
+    # 数据库方言
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    # Hibernate配置
+    hibernate:
+      # DDL自动执行策略（开发环境使用update）
+      ddl-auto: update
+      # 命名策略
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    # 显示SQL语句
+    show-sql: true
+    # 格式化SQL语句
+    properties:
+      hibernate:
+        format_sql: true
+        # 开启SQL统计
+        generate_statistics: true
+
+# 开发工具配置
+  devtools:
+    # 启用自动重启
+    restart:
+      enabled: true
+      # 排除不需要重启的路径
+      exclude: static/**,public/**,templates/**
+    # 启用LiveReload
+    livereload:
+      enabled: true
+
+# 服务器配置 - 开发环境
+server:
+  # 开发环境端口
+  port: 8080
+
+# 日志配置 - 开发环境
+logging:
+  level:
+    # 根日志级别
+    root: INFO
+    # 项目日志级别（开发环境使用DEBUG）
+    com.lx.gameserver: DEBUG
+    # SQL日志级别
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # Spring框架日志
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+  # 日志文件配置
+  file:
+    name: logs/game-server-dev.log
+    max-size: 100MB
+    max-history: 30
+
+# 健康检查配置 - 开发环境
+management:
+  endpoints:
+    web:
+      exposure:
+        # 开发环境暴露所有端点
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# 应用信息 - 开发环境
+info:
+  environment: 开发环境
+  database: MySQL单体数据库
+  cache: 本地Redis
+  features:
+    - 自动重启
+    - 调试日志
+    - SQL显示
+    - 完整健康检查
