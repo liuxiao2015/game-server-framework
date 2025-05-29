@@ -1,0 +1,301 @@
+# 游戏服务器框架数据库配置模板
+# 本文件展示了frame-db模块的完整配置示例
+# 可根据不同环境调整相应的配置参数
+
+# ===== 数据库基础配置 =====
+game:
+  database:
+    # 是否启用数据库功能
+    enabled: true
+    
+    # 主数据源配置
+    master:
+      url: jdbc:mysql://localhost:3306/gamedb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+      username: root
+      password: password
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      weight: 1
+      enabled: true
+    
+    # 从数据源配置（支持多个）
+    slaves:
+      - url: jdbc:mysql://localhost:3307/gamedb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+        username: readonly
+        password: readonly123
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        weight: 2
+        enabled: true
+      - url: jdbc:mysql://localhost:3308/gamedb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+        username: readonly
+        password: readonly123
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        weight: 1
+        enabled: true
+    
+    # 连接池配置
+    pool:
+      # 最大连接数
+      maximum-pool-size: 50
+      # 最小空闲连接数
+      minimum-idle: 10
+      # 连接超时时间（毫秒）
+      connection-timeout: 30000
+      # 空闲超时时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大生命周期（毫秒）
+      max-lifetime: 1800000
+      # 连接泄露检测阈值（毫秒）
+      leak-detection-threshold: 60000
+      # 连接池名称
+      pool-name: "GameDB-HikariCP"
+      
+      # MySQL优化参数
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+    
+    # 分库分表配置
+    sharding:
+      # 是否启用分库分表
+      enabled: false
+      # 数据库分片数量
+      database-sharding-count: 4
+      # 表分片数量
+      table-sharding-count: 8
+      # 分片规则
+      rules:
+        # 用户表分片
+        t_user:
+          database-strategy:
+            sharding-column: user_id
+            algorithm-expression: "db_$->{user_id % 4}"
+          table-strategy:
+            sharding-column: user_id
+            algorithm-expression: "t_user_$->{user_id % 8}"
+        # 玩家表分片
+        t_player:
+          database-strategy:
+            sharding-column: player_id
+            algorithm-expression: "db_$->{player_id % 4}"
+          table-strategy:
+            sharding-column: player_id
+            algorithm-expression: "t_player_$->{player_id % 8}"
+    
+    # 数据加密配置
+    encryption:
+      # 是否启用加密
+      enabled: true
+      # 主密钥
+      key: "gameServerSecretKey2025!@#"
+      # 加密算法
+      algorithm: AES
+    
+    # 监控配置
+    monitoring:
+      # 是否启用监控
+      enabled: true
+      # 慢查询阈值（毫秒）
+      slow-query-threshold: 1000
+      # 指标采集间隔（秒）
+      metrics-interval: 30
+      # 是否导出Prometheus指标
+      prometheus-enabled: true
+    
+    # 健康检查配置
+    health:
+      # 是否启用健康检查
+      enabled: true
+      # 检查间隔（秒）
+      check-interval: 30
+      # 连接超时时间（秒）
+      connection-timeout: 5
+    
+    # 审计日志配置
+    audit:
+      # 是否启用审计
+      enabled: true
+      # 敏感表列表
+      sensitive-tables:
+        - t_user
+        - t_player
+        - t_payment
+      # 审计日志保留天数
+      retention-days: 90
+      # 是否异步记录
+      async: true
+    
+    # 数据脱敏配置
+    sensitive:
+      # 是否启用脱敏
+      enabled: true
+      # 默认脱敏策略
+      default-strategy: MASK
+    
+    # 数据库初始化配置
+    init:
+      # 是否启用初始化
+      enabled: false
+      # 是否初始化测试数据
+      test-data: true
+      # SQL脚本位置
+      schema-locations:
+        - classpath:sql/schema/
+      # 数据脚本位置
+      data-locations:
+        - classpath:sql/data/
+
+# ===== MyBatis Plus配置 =====
+mybatis-plus:
+  # Mapper文件位置
+  mapper-locations: classpath*:mapper/**/*.xml
+  # 实体类包路径
+  type-aliases-package: com.lx.gameserver.**.entity
+  # 配置
+  configuration:
+    # 驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 缓存配置
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    # 积极延迟加载
+    aggressive-lazy-loading: false
+    # 日志实现
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  
+  # 全局配置
+  global-config:
+    # 数据库相关配置
+    db-config:
+      # 主键类型
+      id-type: ASSIGN_ID
+      # 表前缀
+      table-prefix: "t_"
+      # 逻辑删除全局值
+      logic-delete-value: 1
+      # 逻辑未删除全局值
+      logic-not-delete-value: 0
+      # 字段验证策略
+      insert-strategy: NOT_NULL
+      update-strategy: NOT_NULL
+      where-strategy: NOT_NULL
+    
+    # 元数据对象处理器
+    meta-object-handler: com.lx.gameserver.frame.db.base.GameMetaObjectHandler
+    
+    # 是否控制台打印 MyBatis-Plus 的 LOGO
+    banner: false
+
+# ===== 环境特定配置 =====
+---
+# 开发环境配置
+spring:
+  profiles: dev
+  
+game:
+  database:
+    # 开发环境使用H2内存数据库
+    master:
+      url: jdbc:h2:mem:gamedb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false;MODE=MySQL
+      username: sa
+      password: 
+      driver-class-name: org.h2.Driver
+    
+    # 开发环境不配置从库
+    slaves: []
+    
+    # 开发环境启用数据库初始化
+    init:
+      enabled: true
+      test-data: true
+    
+    # 开发环境启用SQL性能分析
+    monitoring:
+      enabled: true
+      slow-query-threshold: 500
+
+# H2控制台配置（仅开发环境）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+# 测试环境配置
+spring:
+  profiles: test
+
+game:
+  database:
+    pool:
+      maximum-pool-size: 20
+      minimum-idle: 5
+    
+    monitoring:
+      slow-query-threshold: 800
+    
+    audit:
+      retention-days: 30
+
+---
+# 生产环境配置
+spring:
+  profiles: prod
+
+game:
+  database:
+    pool:
+      maximum-pool-size: 100
+      minimum-idle: 20
+      leak-detection-threshold: 30000
+    
+    # 生产环境启用分库分表
+    sharding:
+      enabled: true
+      database-sharding-count: 8
+      table-sharding-count: 16
+    
+    monitoring:
+      slow-query-threshold: 2000
+      prometheus-enabled: true
+    
+    audit:
+      retention-days: 180
+    
+    # 生产环境关闭SQL日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+# ===== Spring Boot监控配置 =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ===== 日志配置 =====
+logging:
+  level:
+    com.lx.gameserver.frame.db: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+    org.apache.shardingsphere: INFO
+    org.springframework.jdbc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"

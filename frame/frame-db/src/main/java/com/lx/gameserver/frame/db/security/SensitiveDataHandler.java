@@ -101,6 +101,45 @@ public class SensitiveDataHandler {
     }
 
     /**
+     * 脱敏数据（公共方法）
+     *
+     * @param data 原始数据
+     * @param type 脱敏类型
+     * @return 脱敏后的数据
+     */
+    public String maskData(String data, Sensitive.SensitiveType type) {
+        if (data == null || data.isEmpty()) {
+            return data;
+        }
+
+        try {
+            switch (type) {
+                case MOBILE_PHONE:
+                    return maskMobilePhone(data);
+                case ID_CARD:
+                    return maskIdCard(data);
+                case BANK_CARD:
+                    return maskBankCard(data);
+                case EMAIL:
+                    return maskEmail(data);
+                case NAME:
+                    return maskName(data);
+                case ADDRESS:
+                    return maskAddress(data);
+                case PASSWORD:
+                    return maskPassword(data);
+                case IP_ADDRESS:
+                    return maskIpAddress(data);
+                default:
+                    return data;
+            }
+        } catch (Exception e) {
+            logger.warn("脱敏数据失败，返回原始数据: {}", e.getMessage());
+            return data;
+        }
+    }
+
+    /**
      * 脱敏敏感数据
      *
      * @param data 原始数据
