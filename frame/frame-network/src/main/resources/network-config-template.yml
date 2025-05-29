@@ -1,0 +1,232 @@
+# Game Server Framework - Network Configuration Template
+# 游戏服务器框架 - 网络配置模板
+
+frame:
+  network:
+    # ===== 服务器配置 =====
+    server:
+      # 监听端口
+      port: 8080
+      # 绑定地址（0.0.0.0表示绑定所有接口）
+      bind-address: 0.0.0.0
+      # 传输协议类型：tcp/udp/websocket
+      protocol: tcp
+      # 连接队列大小
+      backlog: 1024
+      # 是否复用地址
+      reuse-address: true
+      # 是否启用TCP_NODELAY（禁用Nagle算法）
+      tcp-no-delay: true
+      # 是否启用SO_KEEPALIVE
+      keep-alive: true
+    
+    # ===== 性能配置 =====
+    performance:
+      # Boss线程数（接受连接的线程数）
+      boss-threads: 2
+      # Worker线程数（处理I/O的线程数，0表示自动检测）
+      worker-threads: 0
+      # 是否使用Epoll（Linux环境下推荐）
+      use-epoll: true
+      # 是否使用Virtual Threads（Java 21+）
+      use-virtual-threads: true
+      # 缓冲区池大小
+      buffer-pool-size: 8192
+      # 是否使用直接内存
+      direct-memory: true
+    
+    # ===== 连接配置 =====
+    connection:
+      # 最大连接数
+      max-connections: 100000
+      # 单个IP最大连接数
+      max-connections-per-ip: 100
+      # 连接空闲超时时间
+      idle-timeout: 300s
+      # 心跳间隔
+      heartbeat-interval: 30s
+      # 心跳超时时间
+      heartbeat-timeout: 90s
+      # 写缓冲区高水位线
+      write-buffer-high: 64KB
+      # 写缓冲区低水位线
+      write-buffer-low: 32KB
+    
+    # ===== 协议配置 =====
+    codec:
+      # 编解码器类型：protobuf/json/custom
+      type: protobuf
+      # 是否启用压缩
+      compression: true
+      # 压缩阈值（字节）
+      compression-threshold: 1024
+      # 最大帧长度
+      max-frame-length: 1MB
+      # 是否启用校验和
+      checksum: true
+    
+    # ===== 安全配置 =====
+    security:
+      # SSL/TLS配置
+      ssl:
+        # 是否启用SSL
+        enabled: false
+        # 证书文件路径
+        cert-path: /path/to/cert.pem
+        # 私钥文件路径
+        key-path: /path/to/key.pem
+        # 信任证书路径
+        trust-cert-path: /path/to/trust.pem
+        # 客户端认证模式：none/optional/require
+        client-auth: none
+      
+      # 限流配置
+      rate-limit:
+        # 是否启用限流
+        enabled: true
+        # 每秒最大请求数
+        max-requests-per-second: 1000
+        # 限流算法：token-bucket/sliding-window
+        algorithm: token-bucket
+        # 突发容量
+        burst-capacity: 2000
+      
+      # 防护配置
+      protection:
+        # 是否启用DDoS防护
+        ddos-protection: true
+        # IP黑名单
+        ip-blacklist: []
+        # IP白名单
+        ip-whitelist: []
+    
+    # ===== 流量控制配置 =====
+    flow-control:
+      # 流量整形
+      traffic-shaper:
+        # 是否启用
+        enabled: true
+        # 读取限制（字节/秒，0表示无限制）
+        read-limit: 0
+        # 写入限制（字节/秒，0表示无限制）
+        write-limit: 0
+        # 最大突发大小
+        max-burst-size: 65536
+      
+      # 背压控制
+      back-pressure:
+        # 是否启用
+        enabled: true
+        # 低水位线
+        low-water-mark: 8192
+        # 高水位线
+        high-water-mark: 32768
+        # 临界水位线
+        critical-mark: 65536
+        # 检查间隔（毫秒）
+        check-interval: 1000
+    
+    # ===== 会话配置 =====
+    session:
+      # 会话存储类型：memory/redis/database
+      store-type: memory
+      # 最大会话数
+      max-sessions: 100000
+      # 会话超时时间
+      session-timeout: 1800s
+      # 清理间隔
+      cleanup-interval: 300s
+      
+      # Redis配置（当store-type为redis时）
+      redis:
+        host: localhost
+        port: 6379
+        database: 0
+        password: ""
+        timeout: 3000ms
+    
+    # ===== 监控配置 =====
+    monitoring:
+      # 是否启用监控
+      enabled: true
+      # 指标收集间隔
+      metrics-interval: 30s
+      # 是否启用JMX
+      jmx-enabled: true
+      # 是否启用健康检查
+      health-check: true
+      # 监控端口
+      monitor-port: 8081
+    
+    # ===== 日志配置 =====
+    logging:
+      # 网络事件日志级别
+      network-level: INFO
+      # 连接事件日志级别
+      connection-level: DEBUG
+      # 消息日志级别
+      message-level: DEBUG
+      # 是否记录慢操作
+      slow-operation: true
+      # 慢操作阈值（毫秒）
+      slow-threshold: 1000
+
+# ===== 示例配置场景 =====
+
+# 高性能游戏服务器配置
+#frame:
+#  network:
+#    server:
+#      port: 8080
+#      protocol: tcp
+#    performance:
+#      boss-threads: 4
+#      worker-threads: 16
+#      use-epoll: true
+#      use-virtual-threads: true
+#      direct-memory: true
+#    connection:
+#      max-connections: 500000
+#      idle-timeout: 600s
+#      heartbeat-interval: 30s
+#    flow-control:
+#      traffic-shaper:
+#        enabled: true
+#        read-limit: 1000000000  # 1GB/s
+#        write-limit: 1000000000 # 1GB/s
+
+# 开发测试环境配置
+#frame:
+#  network:
+#    server:
+#      port: 8080
+#      protocol: tcp
+#    performance:
+#      boss-threads: 1
+#      worker-threads: 4
+#      use-epoll: false
+#      direct-memory: false
+#    connection:
+#      max-connections: 1000
+#      idle-timeout: 300s
+#    security:
+#      rate-limit:
+#        enabled: false
+#    monitoring:
+#      enabled: true
+#      metrics-interval: 10s
+
+# WebSocket游戏服务器配置
+#frame:
+#  network:
+#    server:
+#      port: 8080
+#      protocol: websocket
+#    codec:
+#      type: json
+#      compression: true
+#    security:
+#      ssl:
+#        enabled: true
+#        cert-path: /etc/ssl/certs/server.crt
+#        key-path: /etc/ssl/private/server.key
