@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  文件名: common/pom.xml
+  用途: 游戏服务器框架通用模块的父POM
+  内容: 
+    - 管理所有通用子模块
+    - 统一版本和依赖管理
+    - 模块构建顺序管理
+  技术选型: 
+    - Maven多模块构建
+    - 统一依赖版本管理
+    - 分层模块架构
+  依赖关系: 
+    - 作为common-core、common-protocol、common-api的父项目
+    - 被主项目POM引用
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.lx.gameserver</groupId>
+        <artifactId>game-server-framework</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>common</artifactId>
+    <packaging>pom</packaging>
+    <name>Game Server Framework - Common</name>
+    <description>游戏服务器框架通用模块集合，包含核心工具、协议定义和API接口</description>
+
+    <modules>
+        <module>common-core</module>
+        <module>common-protocol</module>
+        <module>common-api</module>
+    </modules>
+</project>

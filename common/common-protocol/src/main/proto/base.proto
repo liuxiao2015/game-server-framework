@@ -1,0 +1,243 @@
+/*
+ * 文件名: base.proto
+ * 用途: 基础消息结构定义
+ * 实现内容:
+ *   - 定义通用的消息头结构
+ *   - 定义通用的请求和响应结构
+ *   - 定义错误码和状态码枚举
+ *   - 提供可扩展的基础消息格式
+ * 技术选型:
+ *   - Protocol Buffers 3 语法
+ *   - 支持向前向后兼容性
+ *   - 优化序列化性能和空间占用
+ * 依赖关系:
+ *   - 作为其他协议文件的基础依赖
+ *   - 被所有客户端和服务端消息使用
+ */
+
+syntax = "proto3";
+
+package com.lx.gameserver.protocol.base;
+
+option java_package = "com.lx.gameserver.protocol.base";
+option java_outer_classname = "BaseProto";
+option java_multiple_files = true;
+
+// 通用消息头
+message MessageHeader {
+    // 消息ID，用于标识消息类型
+    int32 msg_id = 1;
+    
+    // 序列号，用于请求响应匹配
+    int64 sequence = 2;
+    
+    // 时间戳（毫秒）
+    int64 timestamp = 3;
+    
+    // 用户ID（可选，某些消息可能不需要）
+    int64 user_id = 4;
+    
+    // 会话ID（可选，用于连接管理）
+    string session_id = 5;
+    
+    // 客户端版本
+    string client_version = 6;
+    
+    // 扩展字段，预留用于未来扩展
+    map<string, string> extensions = 15;
+}
+
+// 通用请求消息
+message BaseRequest {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 请求数据（具体业务数据的JSON或其他格式）
+    bytes data = 2;
+}
+
+// 通用响应消息
+message BaseResponse {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 响应数据（具体业务数据的JSON或其他格式）
+    bytes data = 4;
+    
+    // 服务器时间戳
+    int64 server_timestamp = 5;
+}
+
+// 错误响应消息
+message ErrorResponse {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 错误码
+    int32 error_code = 2;
+    
+    // 错误消息
+    string error_message = 3;
+    
+    // 错误详情（可选）
+    string error_details = 4;
+    
+    // 服务器时间戳
+    int64 server_timestamp = 5;
+}
+
+// 心跳请求
+message HeartbeatRequest {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 客户端时间戳
+    int64 client_timestamp = 2;
+}
+
+// 心跳响应
+message HeartbeatResponse {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 服务器时间戳
+    int64 server_timestamp = 2;
+    
+    // 客户端时间戳（回显）
+    int64 client_timestamp = 3;
+    
+    // 在线用户数（可选）
+    int32 online_users = 4;
+}
+
+// 系统通知消息
+message SystemNotification {
+    // 消息头
+    MessageHeader header = 1;
+    
+    // 通知类型
+    NotificationType type = 2;
+    
+    // 通知标题
+    string title = 3;
+    
+    // 通知内容
+    string content = 4;
+    
+    // 通知数据（可选的额外数据）
+    bytes data = 5;
+    
+    // 过期时间（时间戳，可选）
+    int64 expire_time = 6;
+}
+
+// 分页请求参数
+message PageRequest {
+    // 页码（从1开始）
+    int32 page_num = 1;
+    
+    // 每页大小
+    int32 page_size = 2;
+    
+    // 排序字段（可选）
+    string sort_field = 3;
+    
+    // 排序方向（asc/desc）
+    string sort_order = 4;
+}
+
+// 分页响应结果
+message PageResponse {
+    // 当前页码
+    int32 page_num = 1;
+    
+    // 每页大小
+    int32 page_size = 2;
+    
+    // 总记录数
+    int64 total = 3;
+    
+    // 总页数
+    int32 pages = 4;
+    
+    // 是否有上一页
+    bool has_previous = 5;
+    
+    // 是否有下一页
+    bool has_next = 6;
+}
+
+// 通知类型枚举
+enum NotificationType {
+    // 未知类型
+    NOTIFICATION_UNKNOWN = 0;
+    
+    // 系统维护通知
+    NOTIFICATION_MAINTENANCE = 1;
+    
+    // 版本更新通知
+    NOTIFICATION_UPDATE = 2;
+    
+    // 活动通知
+    NOTIFICATION_ACTIVITY = 3;
+    
+    // 公告通知
+    NOTIFICATION_ANNOUNCEMENT = 4;
+    
+    // 私人消息通知
+    NOTIFICATION_PRIVATE_MESSAGE = 5;
+}
+
+// 连接状态枚举
+enum ConnectionStatus {
+    // 未知状态
+    CONNECTION_UNKNOWN = 0;
+    
+    // 连接中
+    CONNECTION_CONNECTING = 1;
+    
+    // 已连接
+    CONNECTION_CONNECTED = 2;
+    
+    // 认证中
+    CONNECTION_AUTHENTICATING = 3;
+    
+    // 已认证
+    CONNECTION_AUTHENTICATED = 4;
+    
+    // 断开连接中
+    CONNECTION_DISCONNECTING = 5;
+    
+    // 已断开
+    CONNECTION_DISCONNECTED = 6;
+    
+    // 重连中
+    CONNECTION_RECONNECTING = 7;
+}
+
+// 消息状态枚举
+enum MessageStatus {
+    // 未知状态
+    MESSAGE_STATUS_UNKNOWN = 0;
+    
+    // 发送中
+    MESSAGE_STATUS_SENDING = 1;
+    
+    // 已发送
+    MESSAGE_STATUS_SENT = 2;
+    
+    // 已到达
+    MESSAGE_STATUS_DELIVERED = 3;
+    
+    // 已读
+    MESSAGE_STATUS_READ = 4;
+    
+    // 发送失败
+    MESSAGE_STATUS_FAILED = 5;
+}

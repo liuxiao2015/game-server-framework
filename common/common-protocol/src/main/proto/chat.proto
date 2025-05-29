@@ -1,0 +1,347 @@
+/*
+ * 文件名: chat.proto
+ * 用途: 聊天系统消息协议定义
+ * 实现内容:
+ *   - 定义聊天消息发送和接收协议
+ *   - 支持多种聊天频道和类型
+ *   - 定义聊天记录查询和管理
+ *   - 支持禁言和聊天管理功能
+ * 技术选型:
+ *   - Protocol Buffers 3 语法
+ *   - 导入base.proto基础消息
+ *   - 支持富文本和多媒体消息
+ * 依赖关系:
+ *   - 依赖base.proto基础协议
+ *   - 被聊天服务和客户端使用
+ */
+
+syntax = "proto3";
+
+package com.lx.gameserver.protocol.chat;
+
+import "base.proto";
+
+option java_package = "com.lx.gameserver.protocol.chat";
+option java_outer_classname = "ChatProto";
+option java_multiple_files = true;
+
+// 发送聊天消息请求
+message SendChatMessageRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 聊天频道
+    ChatChannel channel = 2;
+    
+    // 消息类型
+    MessageType message_type = 3;
+    
+    // 消息内容
+    string content = 4;
+    
+    // 目标玩家ID（私聊时使用）
+    int64 target_player_id = 5;
+    
+    // 目标公会ID（公会聊天时使用）
+    int64 target_guild_id = 6;
+    
+    // 扩展数据（可用于富文本、表情等）
+    map<string, string> extra_data = 7;
+}
+
+// 发送聊天消息响应
+message SendChatMessageResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 消息ID（服务器生成）
+    int64 message_id = 4;
+    
+    // 服务器时间戳
+    int64 server_timestamp = 5;
+}
+
+// 接收聊天消息通知
+message ChatMessageNotification {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 聊天消息
+    ChatMessage chat_message = 2;
+}
+
+// 获取聊天历史请求
+message GetChatHistoryRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 聊天频道
+    ChatChannel channel = 2;
+    
+    // 目标ID（私聊的对方ID，公会聊天的公会ID等）
+    int64 target_id = 3;
+    
+    // 分页参数
+    com.lx.gameserver.protocol.base.PageRequest page_request = 4;
+    
+    // 开始时间（可选，时间戳）
+    int64 start_time = 5;
+    
+    // 结束时间（可选，时间戳）
+    int64 end_time = 6;
+}
+
+// 获取聊天历史响应
+message GetChatHistoryResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 聊天消息列表
+    repeated ChatMessage messages = 4;
+    
+    // 分页信息
+    com.lx.gameserver.protocol.base.PageResponse page_response = 5;
+}
+
+// 禁言请求
+message MutePlayerRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 目标玩家ID
+    int64 target_player_id = 2;
+    
+    // 禁言频道（可指定特定频道）
+    ChatChannel channel = 3;
+    
+    // 禁言时长（秒，0表示永久禁言）
+    int32 mute_duration = 4;
+    
+    // 禁言原因
+    string reason = 5;
+}
+
+// 禁言响应
+message MutePlayerResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 禁言结束时间
+    int64 mute_end_time = 4;
+}
+
+// 解除禁言请求
+message UnmutePlayerRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 目标玩家ID
+    int64 target_player_id = 2;
+    
+    // 解禁频道
+    ChatChannel channel = 3;
+    
+    // 解禁原因
+    string reason = 4;
+}
+
+// 解除禁言响应
+message UnmutePlayerResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+}
+
+// 获取禁言列表请求
+message GetMuteListRequest {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 聊天频道（可选，不指定则获取所有频道）
+    ChatChannel channel = 2;
+    
+    // 分页参数
+    com.lx.gameserver.protocol.base.PageRequest page_request = 3;
+}
+
+// 获取禁言列表响应
+message GetMuteListResponse {
+    // 消息头
+    com.lx.gameserver.protocol.base.MessageHeader header = 1;
+    
+    // 响应状态码
+    int32 code = 2;
+    
+    // 响应消息
+    string message = 3;
+    
+    // 禁言记录列表
+    repeated MuteRecord mute_records = 4;
+    
+    // 分页信息
+    com.lx.gameserver.protocol.base.PageResponse page_response = 5;
+}
+
+// 聊天消息结构
+message ChatMessage {
+    // 消息ID
+    int64 message_id = 1;
+    
+    // 发送者玩家ID
+    int64 sender_id = 2;
+    
+    // 发送者昵称
+    string sender_name = 3;
+    
+    // 发送者头像
+    string sender_avatar = 4;
+    
+    // 发送者VIP等级
+    int32 sender_vip_level = 5;
+    
+    // 聊天频道
+    ChatChannel channel = 6;
+    
+    // 消息类型
+    MessageType message_type = 7;
+    
+    // 消息内容
+    string content = 8;
+    
+    // 目标玩家ID（私聊时）
+    int64 target_player_id = 9;
+    
+    // 目标玩家名称（私聊时）
+    string target_player_name = 10;
+    
+    // 发送时间
+    int64 send_time = 11;
+    
+    // 消息状态
+    com.lx.gameserver.protocol.base.MessageStatus status = 12;
+    
+    // 扩展数据
+    map<string, string> extra_data = 13;
+}
+
+// 禁言记录
+message MuteRecord {
+    // 记录ID
+    int64 record_id = 1;
+    
+    // 被禁言玩家ID
+    int64 player_id = 2;
+    
+    // 被禁言玩家名称
+    string player_name = 3;
+    
+    // 操作者ID
+    int64 operator_id = 4;
+    
+    // 操作者名称
+    string operator_name = 5;
+    
+    // 禁言频道
+    ChatChannel channel = 6;
+    
+    // 禁言开始时间
+    int64 mute_start_time = 7;
+    
+    // 禁言结束时间（0表示永久）
+    int64 mute_end_time = 8;
+    
+    // 禁言原因
+    string reason = 9;
+    
+    // 禁言状态
+    MuteStatus status = 10;
+}
+
+// 聊天频道枚举
+enum ChatChannel {
+    // 未知频道
+    CHAT_CHANNEL_UNKNOWN = 0;
+    
+    // 世界频道
+    CHAT_CHANNEL_WORLD = 1;
+    
+    // 当前频道（附近的玩家）
+    CHAT_CHANNEL_CURRENT = 2;
+    
+    // 公会频道
+    CHAT_CHANNEL_GUILD = 3;
+    
+    // 队伍频道
+    CHAT_CHANNEL_TEAM = 4;
+    
+    // 私聊频道
+    CHAT_CHANNEL_PRIVATE = 5;
+    
+    // 系统频道
+    CHAT_CHANNEL_SYSTEM = 6;
+    
+    // 喇叭频道（全服广播）
+    CHAT_CHANNEL_TRUMPET = 7;
+}
+
+// 消息类型枚举
+enum MessageType {
+    // 文本消息
+    MESSAGE_TYPE_TEXT = 0;
+    
+    // 表情消息
+    MESSAGE_TYPE_EMOJI = 1;
+    
+    // 图片消息
+    MESSAGE_TYPE_IMAGE = 2;
+    
+    // 语音消息
+    MESSAGE_TYPE_VOICE = 3;
+    
+    // 系统消息
+    MESSAGE_TYPE_SYSTEM = 4;
+    
+    // 物品链接
+    MESSAGE_TYPE_ITEM_LINK = 5;
+    
+    // 玩家链接
+    MESSAGE_TYPE_PLAYER_LINK = 6;
+    
+    // 坐标链接
+    MESSAGE_TYPE_LOCATION_LINK = 7;
+}
+
+// 禁言状态枚举
+enum MuteStatus {
+    // 生效中
+    MUTE_STATUS_ACTIVE = 0;
+    
+    // 已过期
+    MUTE_STATUS_EXPIRED = 1;
+    
+    // 已解除
+    MUTE_STATUS_REMOVED = 2;
+}
