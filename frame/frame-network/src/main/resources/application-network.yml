@@ -1,0 +1,236 @@
+# Game Server Framework - Network Configuration Template
+# 游戏服务器框架 - 网络配置模板
+
+frame:
+  network:
+    # 服务器配置
+    server:
+      port: 8080                    # 服务器端口
+      bind-address: 0.0.0.0         # 绑定地址，null表示绑定所有接口
+      protocol: tcp                 # 协议类型: tcp/udp/websocket/http
+      backlog: 1024                 # 连接队列大小
+      reuse-address: true           # 是否复用地址
+      tcp-no-delay: true            # 是否启用TCP_NODELAY
+      keep-alive: true              # 是否启用SO_KEEPALIVE
+    
+    # 性能配置
+    performance:
+      boss-threads: 2               # Boss线程数
+      worker-threads: 0             # Worker线程数，0表示自动检测CPU核心数
+      use-epoll: true               # Linux下是否使用Epoll
+      use-kqueue: true              # macOS下是否使用KQueue
+      use-virtual-threads: true     # 是否使用Virtual Threads（Java 21+）
+      buffer-pool-size: 8192        # 缓冲池大小（字节）
+      use-direct-memory: true       # 是否使用直接内存
+    
+    # 连接配置
+    connection:
+      max-connections: 100000       # 最大连接数
+      idle-timeout: 300s            # 空闲超时时间
+      heartbeat-interval: 30s       # 心跳间隔
+      write-buffer-high: 64KB       # 写缓冲区高水位
+      write-buffer-low: 32KB        # 写缓冲区低水位
+      connection-timeout: 30s       # 连接超时时间
+    
+    # 协议配置
+    codec:
+      message-format: protobuf      # 消息格式: protobuf/json/custom-binary/xml
+      compression:
+        enabled: true               # 是否启用压缩
+        threshold: 1024             # 压缩阈值（字节）
+        algorithm: gzip             # 压缩算法: gzip/deflate/lz4
+      max-frame-length: 1MB         # 最大帧长度
+      checksum-enabled: true        # 是否启用校验和
+    
+    # 安全配置
+    security:
+      ssl:
+        enabled: false              # 是否启用SSL/TLS
+        cert-path: /path/to/cert.pem      # 证书文件路径
+        key-path: /path/to/key.pem        # 私钥文件路径
+        key-password: ""            # 私钥密码
+        protocols: [TLSv1.2, TLSv1.3]    # 支持的TLS协议版本
+        cipher-suites: []           # 支持的加密套件，空表示使用默认
+      
+      # 访问控制
+      access-control:
+        ip-whitelist: []            # IP白名单
+        ip-blacklist: []            # IP黑名单
+        max-connections-per-ip: 100 # 单IP最大连接数
+      
+      # 限流配置
+      rate-limit:
+        enabled: true               # 是否启用限流
+        max-requests-per-second: 1000     # 每秒最大请求数
+        burst-size: 100             # 突发请求大小
+        window-size: 1s             # 滑动窗口大小
+    
+    # 客户端配置
+    client:
+      # 重连配置
+      reconnect:
+        strategy: exponential-backoff     # 重连策略: none/fixed-interval/exponential-backoff/linear-backoff
+        interval: 5s                # 重连间隔
+        max-interval: 60s           # 最大重连间隔
+        max-attempts: 10            # 最大重连次数
+      
+      # 超时配置
+      timeout:
+        connection: 30s             # 连接超时
+        request: 10s                # 请求超时
+        response: 30s               # 响应超时
+      
+      # 心跳配置
+      heartbeat:
+        enabled: true               # 是否启用心跳
+        interval: 30s               # 心跳间隔
+        timeout: 90s                # 心跳超时
+    
+    # 流量控制
+    flow-control:
+      # 流量整形
+      traffic-shaper:
+        enabled: true               # 是否启用流量整形
+        read-limit: 10MB/s          # 读取限制
+        write-limit: 10MB/s         # 写入限制
+        check-interval: 1s          # 检查间隔
+      
+      # 背压控制
+      back-pressure:
+        enabled: true               # 是否启用背压
+        high-watermark: 1000        # 高水位标记
+        low-watermark: 100          # 低水位标记
+    
+    # 高可用配置
+    ha:
+      # 负载均衡
+      load-balancer:
+        algorithm: round-robin      # 负载均衡算法: round-robin/random/least-connections/consistent-hash
+        health-check:
+          enabled: true             # 是否启用健康检查
+          interval: 10s             # 检查间隔
+          timeout: 5s               # 检查超时
+          failure-threshold: 3      # 失败阈值
+      
+      # 故障转移
+      failover:
+        enabled: true               # 是否启用故障转移
+        detection-timeout: 30s      # 故障检测超时
+        retry-interval: 10s         # 重试间隔
+        max-retries: 3              # 最大重试次数
+      
+      # 集群配置
+      cluster:
+        enabled: false              # 是否启用集群
+        node-id: node-1             # 节点ID
+        discovery:
+          type: static              # 发现类型: static/consul/eureka/zookeeper
+          addresses: []             # 静态地址列表
+    
+    # 监控配置
+    monitoring:
+      # 指标收集
+      metrics:
+        enabled: true               # 是否启用指标收集
+        interval: 60s               # 收集间隔
+        export:
+          prometheus: true          # 导出到Prometheus
+          jmx: true                 # 导出到JMX
+      
+      # 连接监控
+      connection-monitor:
+        enabled: true               # 是否启用连接监控
+        log-connections: false      # 是否记录连接日志
+        alert-threshold: 90         # 告警阈值（连接数百分比）
+      
+      # 诊断工具
+      diagnostic:
+        enabled: true               # 是否启用诊断
+        trace-messages: false       # 是否跟踪消息
+        dump-on-error: true         # 错误时是否转储
+    
+    # 日志配置
+    logging:
+      level: INFO                   # 日志级别: TRACE/DEBUG/INFO/WARN/ERROR
+      appenders:
+        console: true               # 控制台输出
+        file: true                  # 文件输出
+        async: true                 # 异步日志
+      
+      # 特定组件日志级别
+      loggers:
+        netty: WARN                 # Netty日志级别
+        connection: INFO            # 连接日志级别
+        message: DEBUG              # 消息日志级别
+
+# 环境特定配置
+---
+# 开发环境配置
+spring:
+  profiles: dev
+  
+frame:
+  network:
+    server:
+      port: 8080
+    performance:
+      worker-threads: 4
+    connection:
+      max-connections: 1000
+    security:
+      rate-limit:
+        max-requests-per-second: 100
+    monitoring:
+      diagnostic:
+        trace-messages: true
+
+---
+# 测试环境配置
+spring:
+  profiles: test
+  
+frame:
+  network:
+    server:
+      port: 8081
+    performance:
+      worker-threads: 8
+    connection:
+      max-connections: 10000
+    security:
+      rate-limit:
+        max-requests-per-second: 500
+
+---
+# 生产环境配置
+spring:
+  profiles: prod
+  
+frame:
+  network:
+    server:
+      port: 8080
+    performance:
+      boss-threads: 4
+      worker-threads: 0  # 自动检测
+      use-virtual-threads: true
+    connection:
+      max-connections: 100000
+      idle-timeout: 600s
+    security:
+      ssl:
+        enabled: true
+        cert-path: /etc/ssl/certs/server.crt
+        key-path: /etc/ssl/private/server.key
+      rate-limit:
+        max-requests-per-second: 10000
+    ha:
+      cluster:
+        enabled: true
+        node-id: ${HOSTNAME:node-1}
+    monitoring:
+      metrics:
+        export:
+          prometheus: true
+      diagnostic:
+        trace-messages: false
