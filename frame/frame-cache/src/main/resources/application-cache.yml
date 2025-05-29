@@ -1,0 +1,189 @@
+# 游戏服务器框架缓存配置模板
+# 文件名: application-cache.yml
+# 用途: 缓存模块配置模板
+# 作者: liuxiao2015
+# 日期: 2025-05-29
+
+frame:
+  cache:
+    # 全局配置
+    global:
+      # 默认过期时间
+      default-expire-time: 3600s
+      # 最大内存使用
+      max-memory-usage: 2GB
+      # 是否启用统计
+      statistics-enabled: true
+      # 是否启用异步操作
+      async-enabled: true
+      # 默认序列化器
+      default-serializer: json
+    
+    # 本地缓存配置
+    local:
+      # 缓存提供者
+      provider: caffeine
+      # 最大容量
+      max-size: 10000
+      # 写后过期时间
+      expire-after-write: 600s
+      # 访问后过期时间
+      expire-after-access: 300s
+      # 淘汰策略：lru/lfu/fifo/random/none
+      eviction-policy: lru
+      # 是否启用统计
+      statistics-enabled: true
+    
+    # Redis配置
+    redis:
+      # 模式：standalone/sentinel/cluster
+      mode: cluster
+      # 地址列表
+      addresses:
+        - redis://127.0.0.1:7000
+        - redis://127.0.0.1:7001
+        - redis://127.0.0.1:7002
+      # 密码
+      password: ${REDIS_PASSWORD:}
+      # 连接超时
+      timeout: 3000ms
+      # 连接池配置
+      pool:
+        max-active: 100
+        max-idle: 50
+        min-idle: 10
+        max-wait: 1000ms
+      # 序列化器
+      serializer: json
+      # 键前缀
+      key-prefix: "game:cache:"
+    
+    # 多级缓存配置
+    multi-level:
+      # 是否启用L1缓存（本地）
+      l1-enabled: true
+      # 是否启用L2缓存（Redis）
+      l2-enabled: true
+      # 是否启用同步
+      sync-enabled: true
+      # 同步延迟
+      sync-delay: 100ms
+      # 回填策略
+      backfill-strategy: default
+      # 冲突解决策略
+      conflict-resolution: last-write-wins
+    
+    # 预热配置
+    warmup:
+      # 是否启用预热
+      enabled: true
+      # 启动时预热
+      startup-warmup: true
+      # 并行线程数
+      parallel-threads: 4
+      # 批处理大小
+      batch-size: 1000
+      # 预热间隔
+      warmup-interval: 3600s
+      # 预热策略
+      strategies:
+        - full
+        - incremental
+        - hotspot
+    
+    # 监控配置
+    monitor:
+      # 是否启用指标
+      metrics-enabled: true
+      # 指标导出间隔
+      export-interval: 60s
+      # 慢查询阈值
+      slow-query-threshold: 100ms
+      # 健康检查间隔
+      health-check-interval: 30s
+      # JMX监控
+      jmx-enabled: true
+    
+    # 分布式特性配置
+    distributed:
+      # 分布式锁
+      lock:
+        # 锁超时时间
+        timeout: 30s
+        # 看门狗续期间隔
+        watchdog-interval: 10s
+        # 是否启用公平锁
+        fair: false
+        # 是否支持重入
+        reentrant: true
+      
+      # 事件总线
+      event-bus:
+        # 是否启用集群广播
+        cluster-broadcast: true
+        # 处理线程数
+        event-threads: 4
+        # 事件超时时间
+        event-timeout: 30s
+      
+      # 一致性哈希
+      consistent-hash:
+        # 虚拟节点数量
+        virtual-nodes: 160
+        # 哈希算法
+        hash-algorithm: sha1
+    
+    # 实例配置
+    instances:
+      # 用户缓存
+      user-cache:
+        type: local
+        max-size: 5000
+        expire-after-write: 1800s
+        eviction-policy: lru
+        
+      # 会话缓存
+      session-cache:
+        type: redis
+        expire-after-write: 3600s
+        serializer: json
+        
+      # 游戏数据缓存
+      game-data-cache:
+        type: multi-level
+        l1-max-size: 2000
+        l1-expire-after-access: 300s
+        l2-expire-after-write: 1800s
+        
+      # 排行榜缓存
+      leaderboard-cache:
+        type: redis
+        expire-after-write: 900s
+        serializer: json
+        compression: true
+        
+      # 配置缓存
+      config-cache:
+        type: local
+        max-size: 1000
+        expire-after-write: 7200s
+        eviction-policy: none
+
+# Spring Boot 缓存配置
+spring:
+  cache:
+    type: composite
+    cache-names:
+      - user-cache
+      - session-cache
+      - game-data-cache
+      - leaderboard-cache
+      - config-cache
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.frame.cache: INFO
+    org.springframework.cache: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
