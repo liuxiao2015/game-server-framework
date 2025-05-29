@@ -23,12 +23,14 @@ import com.lmax.disruptor.dsl.ProducerType;
 import com.lx.gameserver.frame.event.EventBus;
 import com.lx.gameserver.frame.event.core.GameEvent;
 import com.lx.gameserver.frame.event.core.EventHandler;
+import com.lx.gameserver.frame.event.monitor.EventMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
@@ -67,6 +69,10 @@ public class DisruptorEventBus implements EventBus {
     /** 事件处理器 */
     private EventProcessor eventProcessor;
     
+    /** 事件指标收集器 */
+    @Autowired(required = false)
+    private EventMetrics eventMetrics;
+    
     /** 运行状态 */
     private final AtomicBoolean running = new AtomicBoolean(false);
     
@@ -103,10 +109,12 @@ public class DisruptorEventBus implements EventBus {
             // 事件工厂
             EventFactory<EventWrapper> factory = EventWrapper::new;
             
-            // 线程工厂 - 使用虚拟线程
-            ThreadFactory threadFactory = Thread.ofVirtual()
-                    .name("event-processor-" + name + "-", 0)
-                    .factory();
+            // 线程工厂 - 使用普通线程工厂（Java 17不支持虚拟线程）
+            ThreadFactory threadFactory = r -> {
+                Thread t = new Thread(r, "event-processor-" + name + "-" + System.currentTimeMillis());
+                t.setDaemon(true);
+                return t;
+            };
             
             // 创建Disruptor
             disruptor = new Disruptor<>(
@@ -174,6 +182,11 @@ public class DisruptorEventBus implements EventBus {
             
             publishedCount.incrementAndGet();
             
+            // 记录发布指标
+            if (eventMetrics != null) {
+                eventMetrics.recordPublish(event.getEventType());
+            }
+            
             if (logger.isDebugEnabled()) {
                 logger.debug("事件发布成功: eventType={}, eventId={}, sequence={}", 
                         event.getEventType(), event.getEventId(), sequence);
@@ -183,6 +196,12 @@ public class DisruptorEventBus implements EventBus {
             
         } catch (Exception e) {
             failedCount.incrementAndGet();
+            
+            // 记录错误指标
+            if (eventMetrics != null) {
+                eventMetrics.recordError(event.getEventType());
+            }
+            
             logger.error("发布事件失败: eventType={}, eventId={}", 
                     event.getEventType(), event.getEventId(), e);
             return false;
