@@ -1,0 +1,86 @@
+# 游戏服务器框架 - 缓存配置模板
+# 用途: 提供frame-cache模块的完整配置示例
+# 作者: liuxiao2015  
+# 日期: 2025-05-29
+
+frame:
+  cache:
+    # 全局配置
+    global:
+      default-expire-time: 3600s
+      max-memory-usage: 2GB
+      statistics-enabled: true
+      async-enabled: true
+    
+    # 本地缓存配置
+    local:
+      provider: caffeine
+      max-size: 10000
+      expire-after-write: 600s
+      expire-after-access: 300s
+      eviction-policy: lru
+    
+    # Redis配置
+    redis:
+      mode: cluster
+      addresses:
+        - redis://127.0.0.1:7000
+        - redis://127.0.0.1:7001
+        - redis://127.0.0.1:7002
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      pool:
+        max-active: 100
+        max-idle: 50
+        min-idle: 10
+    
+    # 多级缓存配置
+    multi-level:
+      l1-enabled: true
+      l2-enabled: true
+      sync-enabled: true
+      sync-delay: 100ms
+    
+    # 预热配置
+    warmup:
+      enabled: true
+      startup-warmup: true
+      parallel-threads: 4
+      batch-size: 1000
+    
+    # 监控配置
+    monitor:
+      metrics-enabled: true
+      export-interval: 60s
+      slow-query-threshold: 100ms
+    
+    # 自定义缓存实例配置
+    instances:
+      user-cache:
+        type: multi-level
+        max-size: 50000
+        expire-after-write: 1800s
+        expire-after-access: 900s
+        eviction-policy: lru
+        statistics-enabled: true
+      
+      session-cache:
+        type: redis
+        max-size: 100000
+        expire-after-write: 3600s
+        statistics-enabled: true
+      
+      config-cache:
+        type: local
+        max-size: 1000
+        expire-after-write: 7200s
+        eviction-policy: lru
+        statistics-enabled: false
+      
+      temp-cache:
+        type: local
+        max-size: 5000
+        expire-after-write: 300s
+        expire-after-access: 120s
+        eviction-policy: fifo
+        statistics-enabled: true
