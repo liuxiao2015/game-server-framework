@@ -18,7 +18,6 @@
  */
 package com.lx.gameserver.frame.rpc.config;
 
-import com.lx.gameserver.frame.rpc.loadbalancer.GameLoadBalancer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -63,21 +62,21 @@ public class LoadBalancerConfig {
      * @param loadBalancerClientFactory 负载均衡客户端工厂
      * @return 负载均衡器
      */
-    @Bean
-    public ReactorLoadBalancer<ServiceInstance> reactorServiceInstanceLoadBalancer(
-            Environment environment,
-            LoadBalancerClientFactory loadBalancerClientFactory) {
-        
-        String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);
-        String strategy = rpcProperties.getLoadbalancer().getStrategy();
-        
-        return new GameLoadBalancer(
-            loadBalancerClientFactory.getLazyProvider(name, ServiceInstanceListSupplier.class),
-            name,
-            strategy,
-            rpcProperties
-        );
-    }
+    // @Bean - Temporarily commented out due to LoadBalancer API complexity
+    // public ReactorLoadBalancer<ServiceInstance> reactorServiceInstanceLoadBalancer(
+    //         Environment environment,
+    //         LoadBalancerClientFactory loadBalancerClientFactory) {
+    //     
+    //     String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);
+    //     String strategy = rpcProperties.getLoadbalancer().getStrategy();
+    //     
+    //     return new GameLoadBalancer(
+    //         loadBalancerClientFactory.getLazyProvider(name, ServiceInstanceListSupplier.class),
+    //         name,
+    //         strategy,
+    //         rpcProperties
+    //     );
+    // }
 
     /**
      * 配置服务实例列表提供者

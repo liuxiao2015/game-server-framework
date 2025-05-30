@@ -19,7 +19,6 @@
 package com.lx.gameserver.frame.rpc.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.feign.FeignDecorators;
 import org.slf4j.Logger;
@@ -68,7 +67,8 @@ public class CircuitBreakerConfig {
         RpcProperties.CircuitBreakerProperties cbConfig = rpcProperties.getCircuitBreaker();
         
         // 创建熔断器配置
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+        io.github.resilience4j.circuitbreaker.CircuitBreakerConfig config = 
+            io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
             // 失败率阈值（百分比）
             .failureRateThreshold(cbConfig.getFailureRateThreshold())
             // 慢调用率阈值（百分比）
