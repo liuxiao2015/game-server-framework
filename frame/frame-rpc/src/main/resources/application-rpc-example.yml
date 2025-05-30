@@ -1,0 +1,278 @@
+# ======================================
+# 游戏服务器框架 - RPC模块配置示例
+# ======================================
+
+# Spring Boot 基础配置
+spring:
+  application:
+    name: ${APP_NAME:game-server}
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+# 游戏RPC配置
+game:
+  rpc:
+    # 是否启用RPC模块
+    enabled: true
+    
+    # 服务发现配置
+    discovery:
+      # 服务发现类型：nacos、eureka、consul
+      type: ${RPC_DISCOVERY_TYPE:nacos}
+      # 服务器地址
+      server-addr: ${NACOS_SERVER:localhost:8848}
+      # 命名空间
+      namespace: ${NACOS_NAMESPACE:dev}
+      # 用户名（可选）
+      username: ${NACOS_USERNAME:}
+      # 密码（可选）
+      password: ${NACOS_PASSWORD:}
+      # 分组
+      group: ${NACOS_GROUP:DEFAULT_GROUP}
+    
+    # Feign配置
+    feign:
+      # 压缩配置
+      compression:
+        request:
+          enabled: true
+          min-request-size: 2048
+        response:
+          enabled: true
+      
+      # 客户端配置
+      client:
+        config:
+          # 默认配置
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+            logger-level: BASIC
+          
+          # 服务级别配置示例
+          player-service:
+            connect-timeout: 3000
+            read-timeout: 8000
+            logger-level: FULL
+      
+      # 重试配置
+      retry:
+        max-attempts: 3
+        backoff:
+          delay: 1000
+          max-delay: 5000
+          multiplier: 1.5
+    
+    # 负载均衡配置
+    loadbalancer:
+      # 负载均衡策略：round-robin、random、weighted-response-time、least-connections、consistent-hash
+      strategy: ${LB_STRATEGY:weighted-response-time}
+      # 健康检查配置
+      health-check:
+        interval: 5s
+        timeout: 3s
+    
+    # 熔断器配置
+    circuit-breaker:
+      # 失败率阈值（百分比）
+      failure-rate-threshold: 50
+      # 慢调用率阈值（百分比）
+      slow-call-rate-threshold: 50
+      # 慢调用时间阈值
+      slow-call-duration-threshold: 3s
+      # 滑动窗口大小
+      sliding-window-size: 100
+      # 最小调用次数
+      minimum-number-of-calls: 20
+      # 熔断器打开状态持续时间
+      wait-duration-in-open-state: 30s
+    
+    # 监控配置
+    metrics:
+      enabled: true
+      export-interval: 10s
+
+# Spring Cloud相关配置
+spring:
+  cloud:
+    # Nacos服务发现配置
+    nacos:
+      discovery:
+        server-addr: ${game.rpc.discovery.server-addr}
+        namespace: ${game.rpc.discovery.namespace}
+        username: ${game.rpc.discovery.username}
+        password: ${game.rpc.discovery.password}
+        group: ${game.rpc.discovery.group}
+        # 是否启用服务发现
+        enabled: true
+        # 服务实例信息
+        instance:
+          # 权重
+          weight: 100
+          # 是否健康
+          healthy: true
+          # 是否启用
+          enabled: true
+          # 元数据
+          metadata:
+            version: ${APP_VERSION:1.0.0}
+            zone: ${APP_ZONE:default}
+            cluster: ${APP_CLUSTER:default}
+    
+    # LoadBalancer配置
+    loadbalancer:
+      # 缓存配置
+      cache:
+        enabled: true
+        ttl: 30s
+      # 健康检查配置
+      health-check:
+        initial-delay: 0s
+        interval: 25s
+
+# Feign全局配置
+feign:
+  # 客户端配置
+  client:
+    config:
+      default:
+        connectTimeout: ${game.rpc.feign.client.config.default.connect-timeout}
+        readTimeout: ${game.rpc.feign.client.config.default.read-timeout}
+        loggerLevel: ${game.rpc.feign.client.config.default.logger-level}
+  
+  # 压缩配置
+  compression:
+    request:
+      enabled: ${game.rpc.feign.compression.request.enabled}
+      min-request-size: ${game.rpc.feign.compression.request.min-request-size}
+    response:
+      enabled: ${game.rpc.feign.compression.response.enabled}
+  
+  # 熔断配置
+  circuitbreaker:
+    enabled: true
+
+# Resilience4j配置
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: ${game.rpc.circuit-breaker.failure-rate-threshold}
+        slow-call-rate-threshold: ${game.rpc.circuit-breaker.slow-call-rate-threshold}
+        slow-call-duration-threshold: ${game.rpc.circuit-breaker.slow-call-duration-threshold}
+        sliding-window-size: ${game.rpc.circuit-breaker.sliding-window-size}
+        minimum-number-of-calls: ${game.rpc.circuit-breaker.minimum-number-of-calls}
+        wait-duration-in-open-state: ${game.rpc.circuit-breaker.wait-duration-in-open-state}
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      player-service:
+        base-config: default
+      chat-service:
+        base-config: default
+  
+  # 重试配置
+  retry:
+    configs:
+      default:
+        max-attempts: ${game.rpc.feign.retry.max-attempts}
+        wait-duration: ${game.rpc.feign.retry.backoff.delay}
+    instances:
+      player-service:
+        base-config: default
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: ${game.rpc.metrics.enabled}
+
+# 日志配置
+logging:
+  level:
+    # RPC模块日志级别
+    com.lx.gameserver.frame.rpc: DEBUG
+    # Feign日志级别
+    feign: DEBUG
+    # LoadBalancer日志级别
+    org.springframework.cloud.loadbalancer: DEBUG
+    # Resilience4j日志级别
+    io.github.resilience4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+game:
+  rpc:
+    discovery:
+      server-addr: localhost:8848
+      namespace: dev
+    feign:
+      client:
+        config:
+          default:
+            logger-level: FULL
+
+logging:
+  level:
+    root: INFO
+    com.lx.gameserver: DEBUG
+
+---
+# 测试环境配置
+spring:
+  config:
+    activate:
+      on-profile: test
+
+game:
+  rpc:
+    discovery:
+      server-addr: nacos-test:8848
+      namespace: test
+    circuit-breaker:
+      failure-rate-threshold: 60
+      wait-duration-in-open-state: 60s
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+game:
+  rpc:
+    discovery:
+      server-addr: nacos-prod:8848
+      namespace: prod
+    feign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+            logger-level: BASIC
+    circuit-breaker:
+      failure-rate-threshold: 30
+      wait-duration-in-open-state: 120s
+
+logging:
+  level:
+    root: WARN
+    com.lx.gameserver: INFO
