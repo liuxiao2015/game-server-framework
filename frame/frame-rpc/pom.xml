@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   文件名: frame/frame-rpc/pom.xml
-  用途: 游戏服务器框架的RPC通信模块
+  用途: 游戏服务器框架的轻量级RPC通信模块
   内容: 
-    - 基于Dubbo的RPC调用
-    - 服务注册与发现
-    - 负载均衡
-    - 服务治理
+    - 基于Spring Cloud OpenFeign的HTTP调用
+    - Spring Cloud LoadBalancer客户端负载均衡
+    - Resilience4j熔断降级
+    - 服务发现与注册(Nacos/Eureka/Consul)
+    - 调用链追踪与监控
   技术选型: 
-    - Dubbo微服务框架
-    - Zookeeper服务注册中心
-    - 故障转移与服务降级
+    - Spring Cloud OpenFeign声明式HTTP客户端
+    - Spring Cloud LoadBalancer负载均衡
+    - Resilience4j熔断器
+    - Micrometer监控指标
+    - Nacos服务发现(优先)
   依赖关系: 
     - 依赖common-core和common-api
     - 被所有服务模块依赖
@@ -29,7 +32,7 @@
 
     <artifactId>frame-rpc</artifactId>
     <name>Game Server Framework - RPC</name>
-    <description>游戏服务器框架RPC通信模块，基于Dubbo的微服务通信组件</description>
+    <description>游戏服务器框架轻量级RPC通信模块，基于Spring Cloud OpenFeign的HTTP调用组件</description>
 
     <dependencies>
         <!-- 依赖核心模块 -->
@@ -46,16 +49,63 @@
             <version>${project.version}</version>
         </dependency>
         
-        <!-- Dubbo -->
+        <!-- Spring Cloud OpenFeign -->
         <dependency>
-            <groupId>org.apache.dubbo</groupId>
-            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
         
-        <!-- Spring -->
+        <!-- Feign Jackson support -->
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-jackson</artifactId>
+        </dependency>
+        
+        <!-- Spring Cloud LoadBalancer -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        
+        <!-- Resilience4j 熔断器 -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-feign</artifactId>
+        </dependency>
+        
+        <!-- Nacos 服务发现 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        
+        <!-- Micrometer 监控指标 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        
+        <!-- Spring Boot 基础 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
         
         <!-- 工具库 -->
@@ -63,11 +113,19 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
         
         <!-- JSON处理 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         
         <!-- 日志 -->
@@ -97,6 +155,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-wiremock</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
