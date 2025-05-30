@@ -47,6 +47,11 @@ public class SystemManager {
     private final List<System> systemExecutionOrder;
     
     /**
+     * ECS世界引用
+     */
+    private World world;
+    
+    /**
      * 构造函数
      */
     public SystemManager() {
@@ -58,6 +63,7 @@ public class SystemManager {
      * 初始化系统管理器
      */
     public void initialize(World world) {
+        this.world = world;
         for (System system : systems.values()) {
             system.initialize(world);
         }
@@ -105,6 +111,10 @@ public class SystemManager {
     @SuppressWarnings("unchecked")
     public <T extends System> T registerSystem(T system) {
         systems.put((Class<? extends System>) system.getClass(), system);
+        // Initialize the system when it's registered if we have a world
+        if (world != null) {
+            system.initialize(world);
+        }
         updateExecutionOrder();
         return system;
     }

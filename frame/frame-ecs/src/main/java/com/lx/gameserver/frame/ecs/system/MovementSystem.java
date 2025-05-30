@@ -22,6 +22,7 @@ package com.lx.gameserver.frame.ecs.system;
 import com.lx.gameserver.frame.ecs.component.ComponentMapper;
 import com.lx.gameserver.frame.ecs.component.PositionComponent;
 import com.lx.gameserver.frame.ecs.component.VelocityComponent;
+import com.lx.gameserver.frame.ecs.core.AbstractSystem;
 import com.lx.gameserver.frame.ecs.core.Entity;
 
 /**
@@ -60,7 +61,7 @@ public class MovementSystem extends IteratingSystem {
     /**
      * 是否启用物理模拟
      */
-    private boolean enablePhysics = true;
+    private boolean enablePhysics = false;
     
     /**
      * 重力加速度
@@ -71,7 +72,7 @@ public class MovementSystem extends IteratingSystem {
      * 默认构造函数
      */
     public MovementSystem() {
-        this(Priority.NORMAL);
+        this(AbstractSystem.Priority.NORMAL);
     }
     
     /**
