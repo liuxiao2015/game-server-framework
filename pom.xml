@@ -50,6 +50,7 @@
         <module>frame/frame-concurrent</module>
         <module>frame/frame-rpc</module>
         <module>frame/frame-ecs</module>
+        <module>frame/frame-security</module>
         
         <!-- 服务模块 -->
         <module>service/service-gateway</module>
