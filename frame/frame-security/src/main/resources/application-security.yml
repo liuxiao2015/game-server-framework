@@ -1,0 +1,36 @@
+game:
+  security:
+    # 认证配置
+    auth:
+      jwt:
+        secret: ${JWT_SECRET:DefaultSecretKeyToBeChangedInProduction}
+        access-token-validity: 2h
+        refresh-token-validity: 7d
+      multi-device-login: false
+      max-login-attempts: 5
+      lock-duration: 30m
+    
+    # 加密配置
+    crypto:
+      algorithm: AES256
+      rsa-key-size: 2048
+      enable-protocol-encryption: true
+    
+    # 防作弊配置
+    anti-cheat:
+      enable: true
+      detection-threshold: 0.8
+      auto-ban: true
+      ban-duration: 24h
+    
+    # 限流配置
+    rate-limit:
+      api-qps: 100
+      login-qps: 10
+      enable-distributed: true
+    
+    # 审计配置
+    audit:
+      enable: true
+      storage: database
+      retention-days: 90
