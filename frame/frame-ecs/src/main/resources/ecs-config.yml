@@ -1,0 +1,210 @@
+# ECS 配置文件模板
+# 游戏服务器框架 - ECS系统配置
+# 作者: liuxiao2015
+# 日期: 2025-05-29
+
+# 游戏ECS配置
+game:
+  ecs:
+    # 世界配置
+    world:
+      # 初始实体容量
+      initial-entity-capacity: 10000
+      # 组件池大小
+      component-pool-size: 1000
+      # 是否启用调试
+      enable-debug: false
+      # 最大实体数量
+      max-entity-count: 100000
+      # 实体ID回收启用
+      enable-entity-id-recycling: true
+      # 世界更新频率（Hz）
+      update-frequency: 60
+      # 是否启用快照功能
+      enable-snapshots: true
+      # 快照间隔（秒）
+      snapshot-interval: 300
+    
+    # 系统配置
+    system:
+      # 并行处理阈值
+      parallel-threshold: 100
+      # 批处理大小
+      batch-size: 1000
+      # 是否启用性能分析
+      enable-profiling: false
+      # 最大线程数
+      max-threads: 8
+      # 系统超时时间（毫秒）
+      timeout: 16
+      # 调度策略: SEQUENTIAL, SIMPLE_PARALLEL, PIPELINE_PARALLEL, DYNAMIC_LOAD_BALANCE, ADAPTIVE
+      schedule-strategy: SIMPLE_PARALLEL
+    
+    # 优化配置
+    optimization:
+      # 是否使用对象池
+      use-object-pooling: true
+      # 是否缓存查询结果
+      cache-queries: true
+      # 内存对齐字节数
+      memory-alignment: 64
+      # 是否启用位图索引
+      enable-bitmap-index: true
+      # 是否启用复合索引
+      enable-composite-index: true
+      # 索引重建阈值
+      index-rebuild-threshold: 10000
+    
+    # 持久化配置
+    persistence:
+      # 是否启用快照
+      enable-snapshots: true
+      # 快照间隔（秒）
+      snapshot-interval: 300
+      # 是否启用压缩
+      compression: true
+      # 压缩算法: GZIP, LZ4, ZSTD
+      compression-algorithm: LZ4
+      # 序列化格式: BINARY, JSON, PROTOBUF
+      serialization-format: BINARY
+      # 是否启用增量序列化
+      enable-incremental: true
+    
+    # 查询配置
+    query:
+      # 查询缓存大小
+      cache-size: 1000
+      # 缓存过期时间（毫秒）
+      cache-expiry: 5000
+      # 是否启用查询优化
+      enable-optimization: true
+      # 最大查询复杂度
+      max-complexity: 10
+    
+    # 事件配置
+    event:
+      # 事件队列大小
+      queue-size: 10000
+      # 是否启用异步处理
+      enable-async: true
+      # 异步线程池大小
+      async-pool-size: 4
+      # 事件批处理大小
+      batch-size: 100
+      # 事件超时时间（毫秒）
+      timeout: 1000
+    
+    # 调试配置
+    debug:
+      # 调试级别: OFF, BASIC, DETAILED, FULL
+      level: OFF
+      # 是否启用详细日志
+      enable-verbose-logging: false
+      # 是否启用性能监控
+      enable-performance-monitoring: false
+      # 历史记录最大大小
+      max-history-size: 1000
+      # 快照间隔（毫秒）
+      snapshot-interval: 5000
+      # 是否启用实时更新
+      enable-real-time-updates: true
+    
+    # 组件配置
+    component:
+      # 默认池大小
+      default-pool-size: 100
+      # 最大池大小
+      max-pool-size: 10000
+      # 是否启用版本控制
+      enable-versioning: true
+      # 是否启用序列化
+      enable-serialization: true
+    
+    # 原型配置
+    archetype:
+      # 原型缓存大小
+      cache-size: 100
+      # 是否启用原型验证
+      enable-validation: true
+      # 原型继承深度限制
+      max-inheritance-depth: 5
+    
+    # 内存配置
+    memory:
+      # 初始堆大小（MB）
+      initial-heap-size: 512
+      # 最大堆大小（MB）
+      max-heap-size: 2048
+      # GC策略: G1, PARALLEL, CMS
+      gc-strategy: G1
+      # 是否启用内存监控
+      enable-monitoring: true
+
+# 环境特定配置
+---
+# 开发环境配置
+spring:
+  profiles: development
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 1000
+      enable-debug: true
+    system:
+      enable-profiling: true
+    debug:
+      level: DETAILED
+      enable-verbose-logging: true
+      enable-performance-monitoring: true
+
+---
+# 测试环境配置
+spring:
+  profiles: test
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 5000
+      enable-debug: true
+    system:
+      enable-profiling: true
+      parallel-threshold: 50
+    debug:
+      level: BASIC
+      enable-performance-monitoring: true
+
+---
+# 生产环境配置
+spring:
+  profiles: production
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 50000
+      max-entity-count: 200000
+      enable-debug: false
+    system:
+      enable-profiling: false
+      parallel-threshold: 200
+      batch-size: 2000
+      max-threads: 16
+    optimization:
+      use-object-pooling: true
+      cache-queries: true
+      enable-bitmap-index: true
+      enable-composite-index: true
+    persistence:
+      enable-snapshots: true
+      snapshot-interval: 180
+      compression: true
+      compression-algorithm: ZSTD
+    debug:
+      level: OFF
+      enable-verbose-logging: false
+      enable-performance-monitoring: false
+    memory:
+      initial-heap-size: 1024
+      max-heap-size: 8192
