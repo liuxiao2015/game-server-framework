@@ -49,6 +49,7 @@
         <module>frame/frame-actor</module>
         <module>frame/frame-concurrent</module>
         <module>frame/frame-rpc</module>
+        <module>frame/frame-ecs</module>
         
         <!-- 服务模块 -->
         <module>service/service-gateway</module>

@@ -1,0 +1,137 @@
+# ECS配置文件模板
+# 用途: 提供ECS系统的完整配置示例
+# 作者: liuxiao2015
+# 日期: 2025-05-29
+
+# 游戏ECS配置
+game:
+  ecs:
+    # 世界配置
+    world:
+      # 初始实体容量
+      initial-entity-capacity: 10000
+      # 组件池大小
+      component-pool-size: 1000
+      # 是否启用调试
+      enable-debug: false
+      # 最大实体数量
+      max-entity-count: 100000
+      # 是否启用实体ID回收
+      enable-entity-id-recycling: true
+    
+    # 系统配置
+    system:
+      # 并行处理阈值
+      parallel-threshold: 100
+      # 批处理大小
+      batch-size: 1000
+      # 是否启用性能分析
+      enable-profiling: false
+      # 系统更新线程数
+      update-threads: 4
+      # 是否启用系统依赖检查
+      enable-dependency-check: true
+    
+    # 优化配置
+    optimization:
+      # 是否使用对象池
+      use-object-pooling: true
+      # 是否缓存查询
+      cache-queries: true
+      # 内存对齐字节数
+      memory-alignment: 64
+      # 是否启用SIMD优化
+      enable-simd: false
+      # 是否启用预取优化
+      enable-prefetching: true
+    
+    # 持久化配置
+    persistence:
+      # 是否启用快照
+      enable-snapshots: true
+      # 快照间隔（秒）
+      snapshot-interval: 300
+      # 是否启用压缩
+      enable-compression: true
+      # 快照格式 (BINARY, JSON, CUSTOM)
+      snapshot-format: BINARY
+      # 是否启用增量快照
+      enable-incremental-snapshots: true
+    
+    # 调试配置
+    debug:
+      # 是否启用详细日志
+      enable-verbose-logging: false
+      # 是否启用性能监控
+      enable-performance-monitoring: false
+      # 是否启用内存监控
+      enable-memory-monitoring: false
+      # 是否启用实体统计
+      enable-entity-statistics: false
+      # 统计输出间隔（秒）
+      statistics-interval: 60
+
+# 不同环境的配置示例
+---
+# 开发环境配置
+spring:
+  profiles: development
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 1000
+      enable-debug: true
+    system:
+      enable-profiling: true
+    debug:
+      enable-verbose-logging: true
+      enable-performance-monitoring: true
+      enable-entity-statistics: true
+      statistics-interval: 30
+
+---
+# 生产环境配置
+spring:
+  profiles: production
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 50000
+      max-entity-count: 500000
+    system:
+      parallel-threshold: 500
+      batch-size: 2000
+      update-threads: 8
+    optimization:
+      use-object-pooling: true
+      cache-queries: true
+      enable-prefetching: true
+    persistence:
+      enable-snapshots: true
+      snapshot-interval: 600
+      enable-compression: true
+    debug:
+      enable-verbose-logging: false
+      enable-performance-monitoring: true
+      statistics-interval: 300
+
+---
+# 测试环境配置
+spring:
+  profiles: test
+
+game:
+  ecs:
+    world:
+      initial-entity-capacity: 100
+      max-entity-count: 1000
+    system:
+      parallel-threshold: 10
+      enable-profiling: true
+    persistence:
+      enable-snapshots: false
+    debug:
+      enable-entity-statistics: true
+      statistics-interval: 10
