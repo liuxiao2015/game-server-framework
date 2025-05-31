@@ -1,36 +1,228 @@
+# 游戏服务器安全配置模板
+# 文件名: application-security.yml
+# 用途: 游戏服务器安全模块配置
+# 说明: 提供完整的安全配置项，包括认证、加密、防护、审计等
+# 注意: 生产环境中请修改默认密钥和敏感信息
+
+# 游戏安全配置
 game:
   security:
     # 认证配置
     auth:
+      # JWT配置
       jwt:
-        secret: ${JWT_SECRET:DefaultSecretKeyToBeChangedInProduction}
-        access-token-validity: 2h
-        refresh-token-validity: 7d
-      multi-device-login: false
-      max-login-attempts: 5
-      lock-duration: 30m
+        # JWT密钥（生产环境请使用更强的密钥）
+        secret: ${JWT_SECRET:your-super-secret-jwt-key-at-least-256-bits}
+        # 访问令牌有效期
+        access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:2h}
+        # 刷新令牌有效期
+        refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:7d}
+        # 签发者
+        issuer: ${JWT_ISSUER:game-server}
+        # 受众
+        audience: ${JWT_AUDIENCE:game-client}
+      
+      # 多设备登录控制
+      multi-device-login: ${ALLOW_MULTI_DEVICE_LOGIN:false}
+      # 最大登录尝试次数
+      max-login-attempts: ${MAX_LOGIN_ATTEMPTS:5}
+      # 账号锁定时长
+      lock-duration: ${ACCOUNT_LOCK_DURATION:30m}
+      # 会话超时时间
+      session-timeout: ${SESSION_TIMEOUT:1h}
     
     # 加密配置
     crypto:
-      algorithm: AES256
-      rsa-key-size: 2048
-      enable-protocol-encryption: true
+      # 对称加密算法
+      algorithm: ${CRYPTO_ALGORITHM:AES256}
+      # RSA密钥大小
+      rsa-key-size: ${RSA_KEY_SIZE:2048}
+      # 是否启用协议加密
+      enable-protocol-encryption: ${ENABLE_PROTOCOL_ENCRYPTION:true}
+      # 密钥轮换周期（天）
+      key-rotation-days: ${KEY_ROTATION_DAYS:30}
+      # 加密密钥存储位置
+      keystore-path: ${KEYSTORE_PATH:classpath:security/game-keystore.jks}
+      # 密钥库密码
+      keystore-password: ${KEYSTORE_PASSWORD:changeit}
     
     # 防作弊配置
     anti-cheat:
-      enable: true
-      detection-threshold: 0.8
-      auto-ban: true
-      ban-duration: 24h
+      # 是否启用防作弊
+      enable: ${ANTI_CHEAT_ENABLE:true}
+      # 检测阈值（0.0-1.0）
+      detection-threshold: ${ANTI_CHEAT_THRESHOLD:0.8}
+      # 是否自动封禁
+      auto-ban: ${ANTI_CHEAT_AUTO_BAN:true}
+      # 封禁时长
+      ban-duration: ${ANTI_CHEAT_BAN_DURATION:24h}
+      # 内存保护
+      memory-protection: ${MEMORY_PROTECTION_ENABLE:true}
+      # 行为分析
+      behavior-analysis: ${BEHAVIOR_ANALYSIS_ENABLE:true}
     
     # 限流配置
     rate-limit:
-      api-qps: 100
-      login-qps: 10
-      enable-distributed: true
+      # API限流QPS
+      api-qps: ${API_RATE_LIMIT_QPS:100}
+      # 登录限流QPS
+      login-qps: ${LOGIN_RATE_LIMIT_QPS:10}
+      # 是否启用分布式限流
+      enable-distributed: ${ENABLE_DISTRIBUTED_RATE_LIMIT:true}
+      # 限流算法（token_bucket, sliding_window）
+      algorithm: ${RATE_LIMIT_ALGORITHM:token_bucket}
+      # 令牌桶容量
+      bucket-capacity: ${RATE_LIMIT_BUCKET_CAPACITY:1000}
+    
+    # DDoS防护配置
+    ddos-protection:
+      # 是否启用DDoS防护
+      enable: ${DDOS_PROTECTION_ENABLE:true}
+      # 连接数限制
+      max-connections: ${DDOS_MAX_CONNECTIONS:10000}
+      # IP连接数限制
+      max-connections-per-ip: ${DDOS_MAX_CONNECTIONS_PER_IP:100}
+      # 清洗阈值
+      cleaning-threshold: ${DDOS_CLEANING_THRESHOLD:1000}
+    
+    # 黑名单配置
+    blacklist:
+      # 自动封禁阈值
+      auto-ban-threshold: ${BLACKLIST_AUTO_BAN_THRESHOLD:10}
+      # 黑名单同步间隔（分钟）
+      sync-interval: ${BLACKLIST_SYNC_INTERVAL:5}
+      # IP黑名单有效期（小时）
+      ip-ban-duration: ${IP_BAN_DURATION:24}
     
     # 审计配置
     audit:
-      enable: true
-      storage: database
-      retention-days: 90
+      # 是否启用审计
+      enable: ${AUDIT_ENABLE:true}
+      # 存储类型（elasticsearch, database, file）
+      storage: ${AUDIT_STORAGE:elasticsearch}
+      # 日志保留天数
+      retention-days: ${AUDIT_RETENTION_DAYS:90}
+      # 是否记录敏感操作
+      log-sensitive-operations: ${AUDIT_LOG_SENSITIVE:true}
+      # 是否实时告警
+      real-time-alert: ${AUDIT_REAL_TIME_ALERT:true}
+    
+    # 风控配置
+    risk-control:
+      # 是否启用风控
+      enable: ${RISK_CONTROL_ENABLE:true}
+      # 风险评分阈值
+      risk-score-threshold: ${RISK_SCORE_THRESHOLD:80}
+      # 异常检测敏感度
+      anomaly-sensitivity: ${ANOMALY_SENSITIVITY:0.7}
+      # 欺诈检测
+      fraud-detection: ${FRAUD_DETECTION_ENABLE:true}
+    
+    # OAuth2第三方登录配置
+    oauth2:
+      # 微信登录
+      wechat:
+        client-id: ${WECHAT_CLIENT_ID:}
+        client-secret: ${WECHAT_CLIENT_SECRET:}
+        enabled: ${WECHAT_LOGIN_ENABLED:false}
+      
+      # QQ登录
+      qq:
+        client-id: ${QQ_CLIENT_ID:}
+        client-secret: ${QQ_CLIENT_SECRET:}
+        enabled: ${QQ_LOGIN_ENABLED:false}
+      
+      # Google登录
+      google:
+        client-id: ${GOOGLE_CLIENT_ID:}
+        client-secret: ${GOOGLE_CLIENT_SECRET:}
+        enabled: ${GOOGLE_LOGIN_ENABLED:false}
+      
+      # GitHub登录
+      github:
+        client-id: ${GITHUB_CLIENT_ID:}
+        client-secret: ${GITHUB_CLIENT_SECRET:}
+        enabled: ${GITHUB_LOGIN_ENABLED:false}
+    
+    # 验证码配置
+    captcha:
+      # 是否启用验证码
+      enable: ${CAPTCHA_ENABLE:true}
+      # 验证码类型（image, slider, behavior）
+      type: ${CAPTCHA_TYPE:image}
+      # 验证码长度
+      length: ${CAPTCHA_LENGTH:4}
+      # 验证码有效期（分钟）
+      expire-minutes: ${CAPTCHA_EXPIRE_MINUTES:5}
+      # 图片验证码尺寸
+      image:
+        width: ${CAPTCHA_IMAGE_WIDTH:120}
+        height: ${CAPTCHA_IMAGE_HEIGHT:40}
+      # 滑块验证码配置
+      slider:
+        background-width: ${CAPTCHA_SLIDER_BG_WIDTH:300}
+        background-height: ${CAPTCHA_SLIDER_BG_HEIGHT:150}
+        slider-size: ${CAPTCHA_SLIDER_SIZE:50}
+        tolerance: ${CAPTCHA_SLIDER_TOLERANCE:5}
+
+# Spring Security配置
+spring:
+  security:
+    # 默认用户配置（仅开发环境）
+    user:
+      name: ${SECURITY_DEFAULT_USER:admin}
+      password: ${SECURITY_DEFAULT_PASSWORD:admin123}
+      roles: ${SECURITY_DEFAULT_ROLES:ADMIN}
+    
+    # OAuth2客户端配置
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+          github:
+            client-id: ${GITHUB_CLIENT_ID:}
+            client-secret: ${GITHUB_CLIENT_SECRET:}
+            scope: user:email
+
+# Redis配置（用于会话存储和缓存）
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2000ms}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.frame.security: ${SECURITY_LOG_LEVEL:INFO}
+    org.springframework.security: ${SPRING_SECURITY_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+  file:
+    name: ${LOG_FILE_NAME:logs/game-security.log}
+    max-size: ${LOG_FILE_MAX_SIZE:100MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,security
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when-authorized}
+  metrics:
+    tags:
+      application: ${spring.application.name:game-server}
+      environment: ${SPRING_PROFILES_ACTIVE:dev}
