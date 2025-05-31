@@ -22,6 +22,7 @@
 package com.lx.gameserver.frame.ecs.core;
 
 import com.lx.gameserver.frame.ecs.component.ComponentManager;
+import com.lx.gameserver.frame.ecs.config.ECSConfig;
 import com.lx.gameserver.frame.ecs.event.EventBus;
 import com.lx.gameserver.frame.ecs.query.EntityQuery;
 import com.lx.gameserver.frame.ecs.query.QueryCache;
@@ -55,7 +56,7 @@ public class World {
      * 世界配置
      */
     @Getter
-    private final WorldConfig config;
+    private final ECSConfig.WorldConfig config;
     
     /**
      * 实体存储
@@ -123,7 +124,7 @@ public class World {
      *
      * @param config 世界配置
      */
-    public World(WorldConfig config) {
+    public World(ECSConfig.WorldConfig config) {
         this.config = Objects.requireNonNull(config, "世界配置不能为null");
         this.entities = new ConcurrentHashMap<>(config.getInitialEntityCapacity());
         this.pendingRemovalEntities = ConcurrentHashMap.newKeySet();
@@ -140,7 +141,7 @@ public class World {
      * 使用默认配置构造
      */
     public World() {
-        this(new WorldConfig());
+        this(new ECSConfig.WorldConfig());
     }
     
     /**
@@ -609,68 +610,8 @@ public class World {
      *
      * @return 世界配置
      */
-    public WorldConfig getConfig() {
+    public ECSConfig.WorldConfig getConfig() {
         return config;
-    }
-}
-
-/**
- * 世界配置类
- */
-@Getter
-public class WorldConfig {
-    
-    /**
-     * 初始实体容量
-     */
-    private int initialEntityCapacity = 10000;
-    
-    /**
-     * 组件池大小
-     */
-    private int componentPoolSize = 1000;
-    
-    /**
-     * 是否启用调试模式
-     */
-    private boolean debugEnabled = false;
-    
-    /**
-     * 构造函数
-     */
-    public WorldConfig() {}
-    
-    /**
-     * 设置初始实体容量
-     *
-     * @param initialEntityCapacity 初始实体容量
-     * @return 配置对象
-     */
-    public WorldConfig setInitialEntityCapacity(int initialEntityCapacity) {
-        this.initialEntityCapacity = initialEntityCapacity;
-        return this;
-    }
-    
-    /**
-     * 设置组件池大小
-     *
-     * @param componentPoolSize 组件池大小
-     * @return 配置对象
-     */
-    public WorldConfig setComponentPoolSize(int componentPoolSize) {
-        this.componentPoolSize = componentPoolSize;
-        return this;
-    }
-    
-    /**
-     * 设置调试模式
-     *
-     * @param debugEnabled 是否启用调试
-     * @return 配置对象
-     */
-    public WorldConfig setDebugEnabled(boolean debugEnabled) {
-        this.debugEnabled = debugEnabled;
-        return this;
     }
 }
 

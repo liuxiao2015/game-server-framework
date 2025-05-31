@@ -21,6 +21,7 @@
 package com.lx.gameserver.frame.ecs.game;
 
 import com.lx.gameserver.frame.ecs.component.*;
+import com.lx.gameserver.frame.ecs.config.ECSConfig;
 import com.lx.gameserver.frame.ecs.core.*;
 import com.lx.gameserver.frame.ecs.system.*;
 import org.slf4j.Logger;
@@ -100,7 +101,7 @@ public class GameWorld extends World {
     /**
      * 游戏世界配置
      */
-    public static class GameWorldConfig extends WorldConfig {
+    public static class GameWorldConfig extends ECSConfig.WorldConfig {
         private int maxPlayers = 1000;
         private int maxNpcs = 5000;
         private int maxItems = 10000;

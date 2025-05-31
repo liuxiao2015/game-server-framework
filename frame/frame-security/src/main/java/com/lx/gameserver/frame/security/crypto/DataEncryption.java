@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import javax.crypto.Mac;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;

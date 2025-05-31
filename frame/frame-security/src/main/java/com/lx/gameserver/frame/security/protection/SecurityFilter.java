@@ -25,11 +25,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -152,7 +154,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                                              request.getHeader("User-Agent"), 
                                              request.getContentLength())) {
                 log.debug("DDoS防护拒绝请求: IP={}, 路径={}", clientIp, path);
-                response.sendError(HttpServletResponse.SC_TOO_MANY_REQUESTS, "请求频率过高");
+                response.sendError(429, "请求频率过高");
                 return;
             }
             

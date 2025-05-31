@@ -219,8 +219,8 @@ public class AuditEventPublisher {
                 float score = ((Number) eventData.getOrDefault("score", 0)).floatValue();
                 if (score > 80) {
                     String playerId = (String) eventData.get("playerId");
-                    String reason = (String) eventData.get("reason");
-                    triggerAlert("高可信度作弊检测", "玩家: " + playerId + ", 原因: " + reason + ", 评分: " + score, "HIGH");
+                    String cheatReason = (String) eventData.get("reason");
+                    triggerAlert("高可信度作弊检测", "玩家: " + playerId + ", 原因: " + cheatReason + ", 评分: " + score, "HIGH");
                 }
                 break;
                 
