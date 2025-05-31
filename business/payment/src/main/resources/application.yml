@@ -1,0 +1,165 @@
+# 游戏服务器支付模块配置
+# 作者: liuxiao2015
+# 日期: 2025-01-13
+
+game:
+  payment:
+    # 订单配置
+    order:
+      timeout: 30m                    # 订单超时时间
+      number-prefix: "GM"             # 订单号前缀
+      max-retry-times: 3              # 最大重试次数
+    
+    # 渠道配置
+    channels:
+      # 支付宝配置
+      alipay:
+        enabled: true
+        app-id: ${ALIPAY_APP_ID:}
+        private-key: ${ALIPAY_PRIVATE_KEY:}
+        public-key: ${ALIPAY_PUBLIC_KEY:}
+        gateway-url: https://openapi.alipay.com/gateway.do
+        timeout: 30s
+        notify-url: https://api.game.com/payment/alipay/notify
+        extra:
+          sandbox-mode: false
+          sign-type: RSA2
+      
+      # 微信支付配置  
+      wechat:
+        enabled: true
+        app-id: ${WECHAT_APP_ID:}
+        mch-id: ${WECHAT_MCH_ID:}
+        api-key: ${WECHAT_API_KEY:}
+        cert-path: ${WECHAT_CERT_PATH:}
+        notify-url: https://api.game.com/payment/wechat/notify
+        timeout: 30s
+        extra:
+          api-v3-key: ${WECHAT_API_V3_KEY:}
+          base-url: https://api.mch.weixin.qq.com
+          
+      # 苹果支付配置
+      apple:
+        enabled: true
+        app-id: ${APPLE_BUNDLE_ID:}
+        private-key: ${APPLE_SHARED_SECRET:}
+        extra:
+          sandbox-mode: true
+          production-url: https://buy.itunes.apple.com/verifyReceipt
+          sandbox-url: https://sandbox.itunes.apple.com/verifyReceipt
+          
+      # Google支付配置
+      google:
+        enabled: true
+        app-id: ${GOOGLE_PACKAGE_NAME:}
+        private-key: ${GOOGLE_SERVICE_ACCOUNT_KEY:}
+        extra:
+          service-account-email: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:}
+          base-url: https://androidpublisher.googleapis.com/androidpublisher/v3
+    
+    # 风控配置
+    risk:
+      enabled: true
+      max-amount-per-day: 10000       # 单用户单日最大金额（分）
+      max-times-per-day: 20           # 单用户单日最大次数
+      suspicious-amount: 5000         # 可疑金额阈值（分）
+    
+    # 对账配置
+    reconciliation:
+      enabled: true
+      cron: "0 0 2 * * ?"            # 每日2点执行对账
+      retry-times: 3                  # 对账重试次数
+      alert-threshold: 0.01           # 差异告警阈值
+    
+    # 安全配置
+    security:
+      rsa-private-key: ${RSA_PRIVATE_KEY:}
+      rsa-public-key: ${RSA_PUBLIC_KEY:}
+      aes-key: ${AES_KEY:}
+      signature-algorithm: RSA2
+
+# Spring Boot配置
+spring:
+  application:
+    name: payment-service
+  
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/payment_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: PaymentHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  
+  # Redis配置
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    timeout: 6000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-wait: -1ms
+        max-idle: 5
+        min-idle: 0
+  
+  # Jackson配置
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.business.payment: DEBUG
+    org.springframework.transaction: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /payment
+  tomcat:
+    max-threads: 200
+    min-spare-threads: 10
