@@ -1,0 +1,346 @@
+# 游戏服务器网关配置文件
+# 文件名: application-gateway.yml
+# 用途: 生产环境Gateway完整配置模板
+# 包含: 路由配置、限流配置、熔断配置、安全配置、监控配置等
+
+server:
+  port: 8080
+  # Netty服务器配置
+  netty:
+    connection-timeout: 5000
+    max-connections: 10000
+
+spring:
+  application:
+    name: game-gateway
+  
+  profiles:
+    active: prod
+  
+  # Cloud Gateway配置
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 游戏服务路由
+        - id: game-server
+          uri: lb://game-server
+          predicates:
+            - Path=/api/game/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@ipKeyResolver}"
+        
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+            - name: AuthenticationFilter
+        
+        # 聊天服务路由
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+        
+        # WebSocket路由
+        - id: websocket-route
+          uri: lb://game-service
+          predicates:
+            - Path=/ws/**
+          filters:
+            - name: WebSocketUpgrade
+      
+      # 全局配置
+      default-filters:
+        - AddRequestHeader=X-Gateway-Version, 1.0
+        - AddResponseHeader=X-Response-Time, {responseTime}
+        - name: GlobalLoggingFilter
+        - name: GlobalExceptionFilter
+      
+      # 超时配置
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10000
+        pool:
+          max-connections: 1000
+          max-idle-time: 30s
+          max-life-time: 300s
+        
+      # 发现客户端配置
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+    
+    # Nacos服务发现配置
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        service: ${spring.application.name}
+        weight: 1
+        cluster-name: default
+        metadata:
+          version: 1.0.0
+          zone: ${DEPLOY_ZONE:default}
+      
+      # Nacos配置中心
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: DEFAULT_GROUP
+        file-extension: yml
+        shared-configs:
+          - data-id: common-gateway.yml
+            group: DEFAULT_GROUP
+            refresh: true
+        extension-configs:
+          - data-id: gateway-routes.yml
+            group: DEFAULT_GROUP
+            refresh: true
+
+# 游戏网关自定义配置
+game:
+  gateway:
+    # 限流配置
+    rate-limit:
+      enabled: true
+      repository: REDIS
+      default-qps: 100
+      burst-capacity: 200
+      api-limits:
+        "/api/game/login":
+          requests-per-second: 10
+          burst-capacity: 20
+        "/api/game/battle":
+          requests-per-second: 50
+          burst-capacity: 100
+        "/api/chat/send":
+          requests-per-second: 5
+          burst-capacity: 10
+      user-limit:
+        normal-user-rps: 50
+        vip-user-rps: 200
+        admin-user-rps: 1000
+      ip-limit:
+        requests-per-second: 10
+        burst-capacity: 20
+        white-list:
+          - 127.0.0.1
+          - 192.168.0.0/16
+      alert:
+        enabled: true
+        limit-threshold: 100
+        alert-window: 300
+        alert-interval: 600
+    
+    # 熔断配置
+    circuit-breaker:
+      enabled: true
+      failure-rate-threshold: 50
+      slow-call-rate-threshold: 50
+      slow-call-duration-threshold: 3s
+      sliding-window-size: 100
+      minimum-number-of-calls: 20
+      wait-duration-in-open-state: 30s
+      permitted-number-of-calls-in-half-open-state: 10
+      automatic-transition-from-open-to-half-open-enabled: true
+    
+    # 安全配置
+    security:
+      jwt:
+        secret: ${JWT_SECRET:game-server-jwt-secret-key-2025}
+        expiration: 7200
+        refresh-expiration: 604800
+        token-prefix: "Bearer "
+        header-name: "Authorization"
+        refresh-enabled: true
+      
+      cors:
+        enabled: true
+        allowed-origins:
+          - "http://localhost:3000"
+          - "https://game.example.com"
+        allowed-methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowed-headers:
+          - "*"
+        exposed-headers:
+          - X-Total-Count
+          - X-Request-ID
+          - X-Response-Time
+        allow-credentials: true
+        max-age: 3600
+      
+      white-list:
+        - /api/auth/login
+        - /api/auth/register
+        - /api/public/**
+        - /actuator/health
+      
+      ip-access:
+        enabled: false
+        white-list: []
+        black-list: []
+        dynamic-black-list-enabled: true
+        black-list-sync-interval: 60
+      
+      anti-replay:
+        enabled: true
+        timestamp-validity-period: 300
+        nonce-cache-time: 300
+        signature-algorithm: HmacSHA256
+    
+    # 路由配置
+    route:
+      dynamic-enabled: true
+      refresh-interval: 30
+      default-timeout: 5000
+      default-retries: 3
+    
+    # 监控配置
+    monitor:
+      metrics:
+        enabled: true
+        export-interval: 10s
+        include-patterns:
+          - gateway.*
+          - jvm.*
+          - system.*
+        exclude-patterns:
+          - "*.debug.*"
+      
+      alert:
+        enabled: true
+        webhook-url: ${ALERT_WEBHOOK_URL:}
+        thresholds:
+          error-rate: 0.05      # 5%错误率告警
+          response-time: 5000   # 5秒响应时间告警
+          qps: 10000           # QPS阈值告警
+      
+      health:
+        enabled: true
+        check-interval: 30s
+        timeout: 5s
+        endpoints:
+          - name: redis
+            url: redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}
+          - name: nacos
+            url: http://${NACOS_SERVER_ADDR:localhost:8848}/nacos
+
+# Redis配置
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: 0
+    timeout: 5000ms
+    lettuce:
+      pool:
+        max-active: 200
+        max-wait: -1ms
+        max-idle: 10
+        min-idle: 5
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.business.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    io.github.resilience4j: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/gateway.log
+    max-size: 100MB
+    max-history: 30
+
+# Resilience4j配置
+resilience4j:
+  circuitbreaker:
+    instances:
+      game-service:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2s
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+      auth-service:
+        failure-rate-threshold: 60
+        slow-call-rate-threshold: 60
+        slow-call-duration-threshold: 3s
+        sliding-window-size: 50
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 60s
+  
+  ratelimiter:
+    instances:
+      default:
+        limit-for-period: 100
+        limit-refresh-period: 1s
+        timeout-duration: 1s
+      game-api:
+        limit-for-period: 200
+        limit-refresh-period: 1s
+        timeout-duration: 500ms
+  
+  bulkhead:
+    instances:
+      default:
+        max-concurrent-calls: 100
+        max-wait-duration: 100ms
+      game-service:
+        max-concurrent-calls: 200
+        max-wait-duration: 50ms
+
+# 环境变量配置说明
+# NACOS_SERVER_ADDR: Nacos服务器地址，默认localhost:8848
+# NACOS_NAMESPACE: Nacos命名空间，默认public
+# REDIS_HOST: Redis服务器地址，默认localhost
+# REDIS_PORT: Redis端口，默认6379
+# REDIS_PASSWORD: Redis密码，默认为空
+# JWT_SECRET: JWT签名密钥，生产环境必须设置
+# ALERT_WEBHOOK_URL: 告警通知Webhook地址
+# DEPLOY_ZONE: 部署区域标识，用于灰度发布
