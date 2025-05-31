@@ -57,7 +57,7 @@ public class ConsistentHashRouter extends Router {
     private final MessageDigest md5;
     
     public ConsistentHashRouter(String name, RouterConfig config, int virtualNodeCount) {
-        super(name, config);
+        super(name);
         this.virtualNodeCount = virtualNodeCount;
         
         try {
@@ -68,12 +68,21 @@ public class ConsistentHashRouter extends Router {
         
         logger.info("一致性哈希路由器[{}]初始化完成，虚拟节点数: {}", name, virtualNodeCount);
     }
-    
+
     public ConsistentHashRouter(String name, RouterConfig config) {
         this(name, config, 150); // 默认150个虚拟节点
     }
+
+    public ConsistentHashRouter(String name) {
+        this(name, null, 150); // 默认150个虚拟节点，无配置
+    }
     
     @Override
+    public RouteResult route(Object message, ActorRef sender) {
+        recordRouteSuccess();
+        return selectRoutees(message, sender);
+    }
+    
     protected RouteResult selectRoutees(Object message, ActorRef sender) {
         if (hashRing.isEmpty()) {
             return new RouteResult("没有可用的路由目标");

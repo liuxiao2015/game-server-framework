@@ -55,16 +55,25 @@ public class ScatterGatherFirstCompleted extends Router {
     private final AtomicLong errorCount = new AtomicLong(0);
     
     public ScatterGatherFirstCompleted(String name, RouterConfig config, Duration defaultTimeout) {
-        super(name, config);
+        super(name);
         this.defaultTimeout = defaultTimeout;
         logger.info("分散收集首个完成路由器[{}]初始化完成，默认超时: {}", name, defaultTimeout);
     }
-    
+
     public ScatterGatherFirstCompleted(String name, RouterConfig config) {
         this(name, config, Duration.ofSeconds(5));
     }
-    
+
+    public ScatterGatherFirstCompleted(String name) {
+        this(name, null, Duration.ofSeconds(5));
+    }
+
     @Override
+    public RouteResult route(Object message, ActorRef sender) {
+        recordRouteSuccess();
+        return selectRoutees(message, sender);
+    }
+
     protected RouteResult selectRoutees(Object message, ActorRef sender) {
         List<ActorRef> availableRoutees = getAvailableRoutees();
         
@@ -204,18 +213,19 @@ public class ScatterGatherFirstCompleted extends Router {
     }
     
     /**
-     * 获取可用的路由目标
+     * 获取可用的路由目标（重写父类方法使其可见）
      */
-    private List<ActorRef> getAvailableRoutees() {
+    @Override
+    protected List<ActorRef> getAvailableRoutees() {
         return getRoutees().stream()
                 .filter(routee -> !routee.isTerminated())
                 .toList();
     }
     
     /**
-     * 获取统计信息
+     * 获取详细统计信息
      */
-    public ScatterGatherStats getStats() {
+    public ScatterGatherStats getDetailedStats() {
         return new ScatterGatherStats(
                 requestCount.get(),
                 successCount.get(),
