@@ -1,0 +1,106 @@
+# 场景服务配置文件
+# 作者: liuxiao2015
+# 日期: 2025-05-29
+
+game:
+  scene:
+    # 场景管理配置
+    manager:
+      max-scenes: 1000                  # 最大场景数量
+      scene-pool-size: 100             # 场景池大小
+      load-balance-strategy: "least-loaded"  # 负载均衡策略: round-robin, least-loaded, random
+      cleanup-interval: PT5M           # 场景清理间隔 (ISO-8601 Duration格式)
+      empty-scene-timeout: PT10M       # 空场景超时时间
+    
+    # Actor配置
+    actor:
+      dispatcher: "scene-dispatcher"    # 调度器名称
+      mailbox-size: 10000              # 邮箱大小
+      tick-interval: PT0.1S            # Tick间隔
+      max-actors: 5000                 # 最大Actor数量
+      thread-pool-size: 4              # Actor线程池大小
+      message-batch-size: 50           # 消息批处理大小
+    
+    # AOI配置
+    aoi:
+      algorithm: "nine-grid"           # AOI算法: nine-grid, cross-linked
+      grid-size: 100.0                # 网格大小
+      view-distance: 200.0             # 视野距离
+      update-interval: PT0.2S          # 更新间隔
+      optimization-enabled: true       # 启用性能优化
+      cache-size: 1000                 # 缓存大小
+      batch-size: 100                  # 批处理大小
+      event-queue-size: 10000          # 事件队列大小
+    
+    # 同步配置
+    sync:
+      position-sync-interval: PT0.1S   # 位置同步间隔
+      state-sync-interval: PT0.5S      # 状态同步间隔
+      batch-size: 50                   # 批处理大小
+      compression: true                # 启用压缩
+      max-sync-distance: 1000.0        # 最大同步距离
+      optimization-level: 2            # 同步优化级别
+    
+    # 场景类型配置
+    types:
+      main-city:
+        max-players: 500               # 主城最大玩家数
+        time-limit: PT0S               # 时间限制 (0表示无限制)
+      dungeon:
+        max-players: 10                # 副本最大玩家数
+        time-limit: PT30M              # 副本时间限制
+      battlefield:
+        max-players: 100               # 战场最大玩家数
+        time-limit: PT20M              # 战场时间限制
+      field:
+        max-players: 200               # 野外最大玩家数
+        time-limit: PT0S               # 时间限制
+      arena:
+        max-players: 20                # 竞技场最大玩家数
+        time-limit: PT10M              # 竞技场时间限制
+    
+    # 性能配置
+    performance:
+      entity-pool-size: 10000          # 实体池大小
+      message-batch-size: 100          # 消息批处理大小
+      use-native-memory: false         # 是否使用本地内存
+      gc-optimization-level: 1         # GC优化级别
+      enable-cache-warming: true       # 启用缓存预热
+      memory-threshold: 0.8            # 内存监控阈值
+      cpu-threshold: 0.8               # CPU监控阈值
+    
+    # 监控配置
+    monitor:
+      enable: true                     # 启用监控
+      metrics-interval: PT60S          # 指标收集间隔
+      slow-tick-threshold: PT0.2S      # 慢Tick阈值
+      statistics-retention: PT24H      # 统计保留时间
+      enable-detailed-logging: false   # 启用详细日志
+      alert:
+        cpu-usage-threshold: 80.0      # CPU使用率告警阈值
+        memory-usage-threshold: 80.0   # 内存使用率告警阈值
+        entity-count-threshold: 5000   # 实体数量告警阈值
+        message-backlog-threshold: 1000 # 消息积压告警阈值
+        latency-threshold: PT0.5S      # 延迟告警阈值
+
+# 日志配置（可选）
+logging:
+  level:
+    com.lx.gameserver.business.scene: DEBUG    # 场景模块日志级别
+    com.lx.gameserver.business.scene.aoi: INFO # AOI模块日志级别
+    com.lx.gameserver.business.scene.manager: INFO # 管理模块日志级别
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+
+# 线程池配置（可选）
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 4                   # 核心线程数
+        max-size: 16                   # 最大线程数
+        queue-capacity: 1000           # 队列容量
+        keep-alive: PT60S              # 线程存活时间
+    scheduling:
+      pool:
+        size: 2                        # 调度线程池大小
