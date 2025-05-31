@@ -38,6 +38,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StatsComponent extends AbstractComponent {
     
     /**
+     * 组件类型ID
+     */
+    public static final int TYPE_ID = 1;
+    
+    @Override
+    public int getTypeId() {
+        return TYPE_ID;
+    }
+    
+    /**
      * 属性类型枚举
      */
     public enum StatType {
@@ -294,7 +304,7 @@ public class StatsComponent extends AbstractComponent {
     public int removeModifiersBySource(String source) {
         int removedCount = 0;
         for (List<StatModifier> modifierList : modifiers.values()) {
-            removedCount += (int) modifierList.removeIf(modifier -> modifier.getSource().equals(source));
+            removedCount += modifierList.removeIf(modifier -> modifier.getSource().equals(source)) ? 1 : 0;
         }
         if (removedCount > 0) {
             invalidateCache();
@@ -310,7 +320,7 @@ public class StatsComponent extends AbstractComponent {
     public int cleanupExpiredModifiers() {
         int removedCount = 0;
         for (List<StatModifier> modifierList : modifiers.values()) {
-            removedCount += (int) modifierList.removeIf(StatModifier::isExpired);
+            removedCount += modifierList.removeIf(StatModifier::isExpired) ? 1 : 0;
         }
         if (removedCount > 0) {
             invalidateCache();

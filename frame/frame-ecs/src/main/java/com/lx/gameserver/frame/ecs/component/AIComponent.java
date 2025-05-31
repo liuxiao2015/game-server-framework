@@ -39,6 +39,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AIComponent extends AbstractComponent {
     
     /**
+     * 组件类型ID
+     */
+    public static final int TYPE_ID = 3;
+    
+    @Override
+    public int getTypeId() {
+        return TYPE_ID;
+    }
+    
+    /**
      * AI类型枚举
      */
     public enum AIType {
@@ -429,7 +439,7 @@ public class AIComponent extends AbstractComponent {
             if (currentTarget != null && currentTarget.getEntityId() == entityId) {
                 // 选择下一个目标
                 currentTarget = targets.values().stream()
-                        .max(Comparator.comparingFloat(AITarget::getThreatLevel))
+                        .max(Comparator.comparing(AITarget::getThreatLevel))
                         .orElse(null);
             }
             incrementVersion();
@@ -447,7 +457,7 @@ public class AIComponent extends AbstractComponent {
             // 检查当前目标是否还有效
             if (currentTarget != null && !currentTarget.isValid(maxAge)) {
                 currentTarget = targets.values().stream()
-                        .max(Comparator.comparingFloat(AITarget::getThreatLevel))
+                        .max(Comparator.comparing(AITarget::getThreatLevel))
                         .orElse(null);
             }
             incrementVersion();

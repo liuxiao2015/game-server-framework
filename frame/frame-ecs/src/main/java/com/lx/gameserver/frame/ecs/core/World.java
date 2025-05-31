@@ -603,13 +603,22 @@ public class World {
     public boolean isRunning() {
         return state == WorldState.RUNNING;
     }
+    
+    /**
+     * 获取世界配置
+     *
+     * @return 世界配置
+     */
+    public WorldConfig getConfig() {
+        return config;
+    }
 }
 
 /**
  * 世界配置类
  */
 @Getter
-class WorldConfig {
+public class WorldConfig {
     
     /**
      * 初始实体容量

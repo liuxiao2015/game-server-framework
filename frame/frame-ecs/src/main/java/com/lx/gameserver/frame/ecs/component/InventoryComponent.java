@@ -40,6 +40,16 @@ import java.util.function.Predicate;
 public class InventoryComponent extends AbstractComponent {
     
     /**
+     * 组件类型ID
+     */
+    public static final int TYPE_ID = 2;
+    
+    @Override
+    public int getTypeId() {
+        return TYPE_ID;
+    }
+    
+    /**
      * 背包类型枚举
      */
     public enum InventoryType {

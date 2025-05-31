@@ -116,7 +116,7 @@ public abstract class SortedSystem extends IteratingSystem {
     @Override
     protected void onUpdate(float deltaTime) {
         // 获取符合条件的实体
-        Collection<Entity> entities = getEntityQuery().execute();
+        Collection<Entity> entities = getEntities();
         
         if (entities.isEmpty()) {
             return;

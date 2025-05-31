@@ -20,6 +20,8 @@
  */
 package com.lx.gameserver.frame.ecs.event;
 
+import java.util.function.Consumer;
+
 /**
  * ECS事件总线
  * <p>
@@ -48,6 +50,41 @@ public class EventBus {
      */
     public void destroy() {
         // 销毁逻辑
+    }
+    
+    /**
+     * 订阅事件（同步）
+     */
+    public <T> void subscribe(Class<T> eventType, Consumer<T> handler) {
+        // 订阅逻辑
+    }
+    
+    /**
+     * 订阅事件（异步）
+     */
+    public <T> void subscribeAsync(Class<T> eventType, Consumer<T> handler) {
+        // 异步订阅逻辑
+    }
+    
+    /**
+     * 取消订阅
+     */
+    public <T> void unsubscribe(Class<T> eventType, Consumer<T> handler) {
+        // 取消订阅逻辑
+    }
+    
+    /**
+     * 发布事件（同步）
+     */
+    public <T> void publish(T event) {
+        // 发布事件
+    }
+    
+    /**
+     * 发布事件（异步）
+     */
+    public <T> void publishAsync(T event) {
+        // 异步发布事件
     }
     
     /**

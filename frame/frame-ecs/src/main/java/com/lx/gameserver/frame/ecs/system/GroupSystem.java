@@ -101,8 +101,8 @@ public abstract class GroupSystem<K> extends IteratingSystem {
     
     @Override
     protected void onUpdate(float deltaTime) {
-        // 获取符合条件的实体
-        Collection<Entity> entities = getEntityQuery().execute();
+        // 获取符合条件的实体 - 使用父类的entityQuery
+        Collection<Entity> entities = getEntities();
         
         if (entities.isEmpty()) {
             return;

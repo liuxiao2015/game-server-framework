@@ -100,7 +100,7 @@ public class GameWorld extends World {
     /**
      * 游戏世界配置
      */
-    public static class GameWorldConfig {
+    public static class GameWorldConfig extends WorldConfig {
         private int maxPlayers = 1000;
         private int maxNpcs = 5000;
         private int maxItems = 10000;
