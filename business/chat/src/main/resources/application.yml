@@ -1,0 +1,221 @@
+# 游戏聊天模块配置文件
+# 文件名: application.yml
+# 用途: 聊天模块的默认配置模板
+# 说明: 包含聊天系统的所有可配置项，支持环境变量覆盖
+
+game:
+  chat:
+    # 连接配置
+    connection:
+      websocket-port: 8080          # WebSocket服务端口
+      tcp-port: 9090                # TCP服务端口
+      max-connections: 10000        # 最大连接数
+      heartbeat-interval: 30s       # 心跳间隔
+      idle-timeout: 5m              # 空闲超时
+      buffer-size: 8192             # 缓冲区大小
+      enable-compression: true      # 启用压缩
+      enable-ssl: false             # 启用SSL
+      ssl-cert-path: ""             # SSL证书路径
+      ssl-key-path: ""              # SSL私钥路径
+    
+    # 频道配置
+    channels:
+      # 世界频道
+      world:
+        enabled: true               # 是否启用
+        max-members: -1             # 最大成员数（-1为无限制）
+        message-interval: 5s        # 消息发送间隔
+        max-message-length: 200     # 最大消息长度
+        require-permission: false   # 是否需要权限
+        allow-anonymous: false      # 是否允许匿名
+        history-retention-days: 3   # 历史保留天数
+        offline-expire-days: 1      # 离线消息过期天数
+        announcement: "欢迎来到世界频道，请文明聊天！"
+      
+      # 公会频道
+      guild:
+        enabled: true
+        max-members: 500
+        message-interval: 2s
+        max-message-length: 500
+        require-permission: false
+        allow-anonymous: false
+        history-retention-days: 7
+        offline-expire-days: 3
+      
+      # 队伍频道
+      team:
+        enabled: true
+        max-members: 20
+        message-interval: 1s
+        max-message-length: 300
+        require-permission: false
+        allow-anonymous: false
+        history-retention-days: 1
+        offline-expire-days: 1
+      
+      # 私聊频道
+      private-chat:
+        enabled: true
+        max-members: 2
+        message-interval: 1s
+        max-message-length: 1000
+        require-permission: false
+        allow-anonymous: false
+        history-retention-days: 30
+        offline-expire-days: 7
+      
+      # 系统频道
+      system:
+        enabled: true
+        max-members: -1
+        message-interval: 0s
+        max-message-length: 500
+        require-permission: true
+        allow-anonymous: false
+        history-retention-days: 7
+        offline-expire-days: 3
+      
+      # 自定义频道配置示例
+      custom:
+        # 新手频道
+        newbie:
+          enabled: true
+          max-members: 1000
+          message-interval: 3s
+          max-message-length: 300
+          require-permission: false
+          allow-anonymous: false
+          history-retention-days: 1
+          offline-expire-days: 1
+    
+    # 消息配置
+    message:
+      max-length: 500               # 默认最大消息长度
+      max-voice-duration: 60        # 最大语音时长（秒）
+      max-image-size: 2             # 最大图片大小（MB）
+      history-days: 30              # 历史消息保留天数
+      batch-size: 100               # 批量处理大小
+      cache-size: 10000             # 消息缓存大小
+      cache-expire-minutes: 30      # 缓存过期时间（分钟）
+      enable-compression: false     # 启用消息压缩
+      enable-encryption: false      # 启用消息加密
+      recall-time-limit: 5          # 撤回时间限制（分钟）
+    
+    # 安全配置
+    security:
+      sensitive-words-enabled: true # 启用敏感词过滤
+      sensitive-words-file: "classpath:sensitive-words.txt"
+      
+      # 限流配置
+      rate-limit:
+        enabled: true
+        messages-per-minute: 30     # 每分钟最大消息数
+        identical-message-interval: 10s # 相同消息发送间隔
+        window-size: 60             # 限流窗口大小（秒）
+        penalty-duration: 300       # 超出限制的惩罚时间（秒）
+      
+      ban-duration: 24              # 默认禁言时长（小时）
+      enable-ip-limit: true         # 启用IP限制
+      max-connections-per-ip: 10    # 单IP最大连接数
+      enable-captcha: false         # 启用验证码
+    
+    # 存储配置
+    storage:
+      type: mongodb                 # 存储类型: mongodb/mysql/redis/elasticsearch
+      partition-strategy: daily     # 分区策略: daily/weekly/monthly/yearly
+      retention-days: 90            # 数据保留天数
+      archive-enabled: true         # 启用归档
+      archive-threshold-days: 30    # 归档阈值天数
+      connection-pool-size: 20      # 连接池大小
+      query-timeout: 10             # 查询超时（秒）
+      batch-write-size: 1000        # 批量写入大小
+      enable-read-write-separation: false # 启用读写分离
+    
+    # 监控配置
+    monitor:
+      metrics-enabled: true         # 启用指标收集
+      report-interval: 60           # 指标报告间隔（秒）
+      performance-monitor-enabled: true  # 启用性能监控
+      error-monitor-enabled: true   # 启用错误监控
+      log-level: INFO              # 日志级别
+      
+      # 告警阈值
+      alert-threshold:
+        message-delay: 1000         # 消息延迟阈值（毫秒）
+        error-rate: 0.01            # 错误率阈值
+        cpu-usage: 0.8              # CPU使用率阈值
+        memory-usage: 0.8           # 内存使用率阈值
+        connection-count: 8000      # 连接数阈值
+
+# Spring相关配置
+spring:
+  # 数据源配置（示例）
+  datasource:
+    # MongoDB配置
+    data:
+      mongodb:
+        uri: mongodb://localhost:27017/gameserver
+        database: gameserver
+    
+    # MySQL配置（备选）
+    # url: jdbc:mysql://localhost:3306/gameserver?useUnicode=true&characterEncoding=utf8&useSSL=false
+    # username: gameserver
+    # password: password
+    # driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 5000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1ms
+        max-idle: 10
+        min-idle: 0
+  
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  
+  # 应用配置
+  application:
+    name: chat-service
+
+# 服务器配置
+server:
+  port: 8081
+  servlet:
+    context-path: /chat
+  compression:
+    enabled: true
+    mime-types: text/html,text/plain,text/css,application/javascript,application/json
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.business.chat: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.data.redis: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
