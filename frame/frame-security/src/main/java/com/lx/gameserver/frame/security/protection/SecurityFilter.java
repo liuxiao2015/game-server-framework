@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -153,7 +154,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                                              request.getHeader("User-Agent"), 
                                              request.getContentLength())) {
                 log.debug("DDoS防护拒绝请求: IP={}, 路径={}", clientIp, path);
-                response.sendError(HttpServletResponse.SC_TOO_MANY_REQUESTS, "请求频率过高");
+                response.sendError(429, "请求频率过高");
                 return;
             }
             

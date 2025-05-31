@@ -116,6 +116,12 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- JSR-250 注解支持 -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+
         <!-- Caffeine本地缓存 -->
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>

@@ -50,6 +50,8 @@
         <module>frame/frame-concurrent</module>
         <module>frame/frame-rpc</module>
         <module>frame/frame-ecs</module>
+        <module>frame/frame-config</module>
+        <module>frame/frame-monitor</module>
         <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
         
         <!-- 测试模块 -->
@@ -68,15 +70,17 @@
         -->
         
         <!-- 业务模块 -->
-        <!-- Temporarily disabled while fixing framework issues
-        <module>business/gateway</module>
+        <module>business/ranking</module>
+        <!-- Temporarily disabled due to compilation issues
+        <module>business/activity</module>
         <module>business/payment</module>
+        <module>business/scene</module>
+        -->
+        <!-- Temporarily disabled while fixing security dependencies
+        <module>business/gateway</module>
         <module>business/login</module>
         <module>business/chat</module>
-        <module>business/activity</module>
-        <module>business/ranking</module>
         <module>business/logic</module>
-        <module>business/scene</module>
         -->
     </modules>
     
