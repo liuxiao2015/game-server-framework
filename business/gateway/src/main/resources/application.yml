@@ -1,0 +1,31 @@
+# Gateway服务配置文件
+server:
+  port: 8080
+
+spring:
+  application:
+    name: business-gateway
+  
+  # Cloud Gateway配置
+  cloud:
+    gateway:
+      # 默认过滤器
+      default-filters:
+        - AddRequestHeader=X-Gateway-Version, 1.0
+        - AddResponseHeader=X-Response-Time, {responseTime}
+      
+      # HTTP客户端配置
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10000
+        pool:
+          max-connections: 1000
+          max-idle-time: 30s
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.business.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
