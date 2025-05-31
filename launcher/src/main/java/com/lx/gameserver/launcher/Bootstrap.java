@@ -82,7 +82,16 @@ public class Bootstrap {
             System.out.println("正在启动游戏服务器框架...");
             ConfigurableApplicationContext context = app.run(args);
             
-            // 6. 输出启动成功信息
+            // 6. 获取框架实例并显示状态
+            try {
+                GameServerFramework framework = context.getBean(GameServerFramework.class);
+                System.out.println("框架状态: " + framework.getStatus().getDescription());
+                System.out.println("已加载模块数: " + framework.getInitializedModuleCount());
+            } catch (Exception e) {
+                System.out.println("框架状态查询失败: " + e.getMessage());
+            }
+            
+            // 7. 输出启动成功信息
             printStartupSuccess(context, runMode);
             
         } catch (Exception e) {

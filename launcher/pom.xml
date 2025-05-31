@@ -52,6 +52,38 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- 框架模块依赖 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-event</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-concurrent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-actor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-network</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-cache</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-db</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- 测试框架 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

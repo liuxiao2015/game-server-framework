@@ -71,8 +71,8 @@
             <!-- 文件名模式 -->
             <fileNamePattern>${LOG_PATH}/${LOG_FILE}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <!-- 单个文件最大大小 -->
+            <maxFileSize>100MB</maxFileSize>
             <springProfile name="dev">
-                <maxFileSize>100MB</maxFileSize>
                 <maxHistory>30</maxHistory>
                 <totalSizeCap>5GB</totalSizeCap>
             </springProfile>
@@ -105,8 +105,8 @@
         <!-- 滚动策略 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/${LOG_FILE}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
             <springProfile name="dev">
-                <maxFileSize>50MB</maxFileSize>
                 <maxHistory>60</maxHistory>
                 <totalSizeCap>2GB</totalSizeCap>
             </springProfile>
