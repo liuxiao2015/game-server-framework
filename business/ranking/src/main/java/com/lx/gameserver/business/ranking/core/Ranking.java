@@ -227,6 +227,47 @@ public abstract class Ranking implements InitializingBean, DisposableBean {
     // ===== 公共方法定义 =====
 
     /**
+     * 获取前N名
+     *
+     * @param topN 前N名
+     * @return 排行榜条目列表
+     */
+    public abstract List<RankingEntry> getTopEntries(int topN);
+
+    /**
+     * 获取指定范围的排名
+     *
+     * @param start 起始排名
+     * @param end   结束排名
+     * @return 排行榜条目列表
+     */
+    public abstract List<RankingEntry> getRangeEntries(int start, int end);
+
+    /**
+     * 获取实体排名信息
+     *
+     * @param entityId 实体ID
+     * @return 排行榜条目
+     */
+    public abstract RankingEntry getEntityRank(Long entityId);
+
+    /**
+     * 获取实体周围的排名
+     *
+     * @param entityId 实体ID
+     * @param range    周围范围
+     * @return 排行榜条目列表
+     */
+    public abstract List<RankingEntry> getSurroundingEntries(Long entityId, int range);
+
+    /**
+     * 获取排行榜总数
+     *
+     * @return 总数
+     */
+    public abstract long getCount();
+
+    /**
      * 启动排行榜
      */
     public void start() {
