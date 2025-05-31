@@ -49,7 +49,7 @@
         <module>frame/frame-actor</module>
         <module>frame/frame-concurrent</module>
         <module>frame/frame-rpc</module>
-        <!-- <module>frame/frame-ecs</module> Temporarily disabled due to compilation issues -->
+        <module>frame/frame-ecs</module>
         <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
         
         <!-- 测试模块 -->
