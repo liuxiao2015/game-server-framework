@@ -52,6 +52,9 @@
         <!-- <module>frame/frame-ecs</module> Temporarily disabled due to compilation issues -->
         <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
         
+        <!-- 测试模块 -->
+        <module>framework-test</module>
+        
         <!-- 服务模块 -->
         <!-- Temporarily disabled while fixing framework issues  
         <module>service/service-gateway</module>
