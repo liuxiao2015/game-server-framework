@@ -65,6 +65,7 @@
         <!-- 业务模块 -->
         <module>business/gateway</module>
         <module>business/payment</module>
+        <module>business/login</module>
     </modules>
     
     <!-- 属性配置 -->
