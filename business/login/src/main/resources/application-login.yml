@@ -1,0 +1,261 @@
+# 游戏服务器登录模块配置模板
+# 文件名: application-login.yml
+# 用途: 登录模块的完整配置参数模板
+# 说明: 生产环境中请修改所有密钥和敏感信息
+
+game:
+  login:
+    # ==================== Token配置 ====================
+    token:
+      # JWT密钥（生产环境必须修改）
+      jwt-secret: ${JWT_SECRET:your-very-long-and-secure-secret-key-here-please-change-in-production}
+      # 访问Token过期时间
+      access-token-expire: 2h
+      # 刷新Token过期时间
+      refresh-token-expire: 7d
+      # 最大同时在线设备数
+      max-devices: 3
+      # Token签发者
+      issuer: game-server
+      # Token受众
+      audience: game-client
+
+    # ==================== 安全配置 ====================
+    security:
+      # 最大登录尝试次数
+      max-login-attempts: 5
+      # 账号锁定时间
+      lock-duration: 30m
+      # 验证码触发阈值
+      captcha-threshold: 3
+      # IP限流（每分钟最多10次）
+      ip-rate-limit: 10/m
+      # 设备限流（每分钟最多5次）
+      device-rate-limit: 5/m
+      # 密码最小长度
+      password-min-length: 8
+      # 密码是否需要特殊字符
+      password-require-special-char: true
+      # 是否启用异地登录检测
+      enable-location-check: true
+      # 是否启用设备指纹验证
+      enable-device-fingerprint: true
+
+    # ==================== 登录策略配置 ====================
+    strategies:
+      # 密码登录
+      password:
+        enabled: true
+        min-length: 8
+        require-special-char: true
+        password-expire-days: 90
+
+      # 手机验证码登录
+      mobile:
+        enabled: true
+        sms-expire: 5m
+        daily-limit: 10
+        send-interval: 1m
+
+      # 第三方登录
+      third-party:
+        # 微信登录
+        wechat:
+          enabled: true
+          app-id: ${WECHAT_APP_ID:your_wechat_app_id}
+          app-secret: ${WECHAT_APP_SECRET:your_wechat_app_secret}
+          redirect-uri: ${WECHAT_REDIRECT_URI:https://your-domain.com/auth/wechat/callback}
+          scope: snsapi_userinfo
+
+        # QQ登录
+        qq:
+          enabled: false
+          app-id: ${QQ_APP_ID:your_qq_app_id}
+          app-secret: ${QQ_APP_SECRET:your_qq_app_secret}
+          redirect-uri: ${QQ_REDIRECT_URI:https://your-domain.com/auth/qq/callback}
+          scope: get_user_info
+
+        # 微博登录
+        weibo:
+          enabled: false
+          app-id: ${WEIBO_APP_ID:your_weibo_app_id}
+          app-secret: ${WEIBO_APP_SECRET:your_weibo_app_secret}
+          redirect-uri: ${WEIBO_REDIRECT_URI:https://your-domain.com/auth/weibo/callback}
+          scope: email
+
+        # Apple登录
+        apple:
+          enabled: false
+          app-id: ${APPLE_APP_ID:your_apple_app_id}
+          app-secret: ${APPLE_APP_SECRET:your_apple_app_secret}
+          redirect-uri: ${APPLE_REDIRECT_URI:https://your-domain.com/auth/apple/callback}
+          scope: name email
+
+        # Google登录
+        google:
+          enabled: false
+          app-id: ${GOOGLE_APP_ID:your_google_app_id}
+          app-secret: ${GOOGLE_APP_SECRET:your_google_app_secret}
+          redirect-uri: ${GOOGLE_REDIRECT_URI:https://your-domain.com/auth/google/callback}
+          scope: openid email profile
+
+      # 设备登录（游客模式）
+      device:
+        enabled: true
+        allow-guest: true
+        guest-expire: 30d
+        enable-fingerprint: true
+
+      # 生物识别登录
+      biometric:
+        enabled: false
+        similarity-threshold: 0.8
+        max-failed-attempts: 3
+        enable-liveness-detection: true
+
+    # ==================== 防沉迷配置 ====================
+    anti-addiction:
+      # 是否启用防沉迷
+      enabled: true
+      # 是否需要实名认证
+      real-name-required: true
+      # 未成年人游戏时长限制（分钟）
+      minor-play-time: 90
+      # 宵禁开始时间
+      minor-curfew-start: "22:00"
+      # 宵禁结束时间
+      minor-curfew-end: "08:00"
+      # 充值限制配置（按年龄段，单位：元）
+      recharge-limit:
+        # 8-16岁
+        minor: 200
+        # 16-18岁
+        teen: 400
+        # 18岁以上
+        adult: -1
+
+    # ==================== 监控配置 ====================
+    monitor:
+      # 是否启用指标收集
+      metrics-enabled: true
+      # 慢登录阈值
+      slow-login-threshold: 1s
+      # 告警Webhook URL
+      alert-webhook-url: ${ALERT_WEBHOOK_URL:https://your-webhook-url.com/alerts}
+      # 是否启用分布式追踪
+      tracing-enabled: true
+      # 采样率
+      sampling-rate: 0.1
+
+# ==================== 数据库配置 ====================
+spring:
+  datasource:
+    # 主数据库
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:game_server}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # 连接池配置
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+
+  # Redis配置
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: 2000ms
+    
+    # 连接池配置
+    jedis:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 2
+        max-wait: 2000ms
+
+# ==================== MyBatis Plus配置 ====================
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 开启二级缓存
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    # 按需加载
+    aggressive-lazy-loading: false
+  
+  # 全局配置
+  global-config:
+    db-config:
+      # 主键类型
+      id-type: ASSIGN_ID
+      # 逻辑删除字段
+      logic-delete-field: deleted
+      # 逻辑删除值
+      logic-delete-value: 1
+      # 逻辑未删除值
+      logic-not-delete-value: 0
+
+# ==================== 日志配置 ====================
+logging:
+  level:
+    com.lx.gameserver.business.login: INFO
+    # SQL日志
+    com.lx.gameserver.business.login.mapper: DEBUG
+  
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# ==================== 短信服务配置 ====================
+sms:
+  # 阿里云短信
+  aliyun:
+    enabled: true
+    access-key-id: ${ALIYUN_SMS_ACCESS_KEY:your_access_key}
+    access-key-secret: ${ALIYUN_SMS_ACCESS_SECRET:your_access_secret}
+    sign-name: ${ALIYUN_SMS_SIGN:游戏服务器}
+    template-code: ${ALIYUN_SMS_TEMPLATE:SMS_123456789}
+
+  # 腾讯云短信
+  tencent:
+    enabled: false
+    secret-id: ${TENCENT_SMS_SECRET_ID:your_secret_id}
+    secret-key: ${TENCENT_SMS_SECRET_KEY:your_secret_key}
+    sdk-app-id: ${TENCENT_SMS_SDK_APP_ID:your_sdk_app_id}
+    sign: ${TENCENT_SMS_SIGN:游戏服务器}
+    template-id: ${TENCENT_SMS_TEMPLATE_ID:123456}
+
+# ==================== 实名认证配置 ====================
+real-name:
+  # 是否启用
+  enabled: true
+  # 服务提供商
+  provider: aliyun
+  
+  # 阿里云实名认证
+  aliyun:
+    app-code: ${ALIYUN_REALNAME_APP_CODE:your_app_code}
+    url: https://eid.shumaidata.com/eid/check
+
+# ==================== 监控和健康检查 ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
