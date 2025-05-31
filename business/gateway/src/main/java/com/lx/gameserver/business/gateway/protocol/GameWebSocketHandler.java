@@ -313,7 +313,7 @@ public class GameWebSocketHandler implements WebSocketHandler {
         if (sessionInfo != null && sessionInfo.getSession().isOpen()) {
             sessionInfo.getSession().close()
                 .subscribe(
-                    () -> log.info("WebSocket会话已关闭: sessionId={}", sessionId),
+                    unused -> log.info("WebSocket会话已关闭: sessionId={}", sessionId),
                     error -> log.error("关闭WebSocket会话失败: sessionId={}", sessionId, error)
                 );
         }
