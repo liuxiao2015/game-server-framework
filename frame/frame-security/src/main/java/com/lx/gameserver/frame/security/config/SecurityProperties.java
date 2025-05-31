@@ -71,6 +71,24 @@ public class SecurityProperties {
     private AuditProperties audit = new AuditProperties();
 
     /**
+     * 会话管理配置
+     */
+    @NestedConfigurationProperty
+    private SessionProperties session = new SessionProperties();
+
+    /**
+     * OAuth2集成配置
+     */
+    @NestedConfigurationProperty
+    private OAuth2Properties oauth2 = new OAuth2Properties();
+
+    /**
+     * 验证码配置
+     */
+    @NestedConfigurationProperty
+    private CaptchaProperties captcha = new CaptchaProperties();
+
+    /**
      * 认证配置属性
      */
     @Data
@@ -204,5 +222,162 @@ public class SecurityProperties {
          * 审计日志保留天数
          */
         private int retentionDays = 90;
+    }
+
+    /**
+     * 会话管理配置属性
+     */
+    @Data
+    public static class SessionProperties {
+        /**
+         * 会话超时时间（秒）
+         */
+        private int timeout = 3600;
+
+        /**
+         * 最大并发会话数
+         */
+        private int maxConcurrentSessions = 3;
+
+        /**
+         * 是否启用会话劫持检测
+         */
+        private boolean enableHijackingDetection = true;
+
+        /**
+         * 分布式会话存储
+         */
+        private boolean enableDistributedStorage = true;
+    }
+
+    /**
+     * OAuth2集成配置属性
+     */
+    @Data
+    public static class OAuth2Properties {
+        /**
+         * 微信配置
+         */
+        @NestedConfigurationProperty
+        private PlatformProperties wechat = new PlatformProperties();
+
+        /**
+         * QQ配置
+         */
+        @NestedConfigurationProperty
+        private PlatformProperties qq = new PlatformProperties();
+
+        /**
+         * Google配置
+         */
+        @NestedConfigurationProperty
+        private PlatformProperties google = new PlatformProperties();
+
+        /**
+         * GitHub配置
+         */
+        @NestedConfigurationProperty
+        private PlatformProperties github = new PlatformProperties();
+
+        /**
+         * 平台配置属性
+         */
+        @Data
+        public static class PlatformProperties {
+            /**
+             * 客户端ID
+             */
+            private String clientId;
+
+            /**
+             * 客户端密钥
+             */
+            private String clientSecret;
+
+            /**
+             * 是否启用
+             */
+            private boolean enabled = false;
+        }
+    }
+
+    /**
+     * 验证码配置属性
+     */
+    @Data
+    public static class CaptchaProperties {
+        /**
+         * 是否启用验证码
+         */
+        private boolean enable = true;
+
+        /**
+         * 验证码类型（image, slider, behavior）
+         */
+        private String type = "image";
+
+        /**
+         * 验证码长度
+         */
+        private int length = 4;
+
+        /**
+         * 验证码有效期（分钟）
+         */
+        private int expireMinutes = 5;
+
+        /**
+         * 图片验证码配置
+         */
+        @NestedConfigurationProperty
+        private ImageProperties image = new ImageProperties();
+
+        /**
+         * 滑块验证码配置
+         */
+        @NestedConfigurationProperty
+        private SliderProperties slider = new SliderProperties();
+
+        /**
+         * 图片验证码配置属性
+         */
+        @Data
+        public static class ImageProperties {
+            /**
+             * 图片宽度
+             */
+            private int width = 120;
+
+            /**
+             * 图片高度
+             */
+            private int height = 40;
+        }
+
+        /**
+         * 滑块验证码配置属性
+         */
+        @Data
+        public static class SliderProperties {
+            /**
+             * 背景图片宽度
+             */
+            private int backgroundWidth = 300;
+
+            /**
+             * 背景图片高度
+             */
+            private int backgroundHeight = 150;
+
+            /**
+             * 滑块大小
+             */
+            private int sliderSize = 50;
+
+            /**
+             * 容错范围
+             */
+            private int tolerance = 5;
+        }
     }
 }
