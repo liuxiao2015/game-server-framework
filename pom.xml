@@ -67,6 +67,7 @@
         <module>business/payment</module>
         <module>business/login</module>
         <module>business/chat</module>
+        <module>business/activity</module>
     </modules>
     
     <!-- 属性配置 -->
