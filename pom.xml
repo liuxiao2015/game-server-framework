@@ -66,6 +66,7 @@
         <module>business/gateway</module>
         <module>business/payment</module>
         <module>business/login</module>
+        <module>business/chat</module>
     </modules>
     
     <!-- 属性配置 -->
