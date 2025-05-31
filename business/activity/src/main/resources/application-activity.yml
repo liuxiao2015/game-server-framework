@@ -1,0 +1,292 @@
+# 活动模块配置文件
+# 文件名: application-activity.yml
+# 用途: 活动模块的配置参数
+# 实现内容:
+#   - 全局配置参数
+#   - 调度器配置
+#   - 缓存配置
+#   - 存储配置
+#   - 奖励配置
+#   - 监控配置
+# 技术选型: YAML配置格式
+# 依赖关系: 被Spring Boot加载使用
+# 作者: liuxiao2015
+# 日期: 2025-01-13
+
+game:
+  activity:
+    # 全局配置
+    global:
+      # 最大并发活动数
+      max-concurrent-activities: 20
+      # 默认时区
+      default-timezone: "Asia/Shanghai"
+      # 自动清理天数
+      auto-cleanup-days: 30
+      # 是否启用调试模式
+      debug-mode: false
+      # 默认语言
+      default-language: "zh_CN"
+    
+    # 调度配置
+    scheduler:
+      # 核心线程池大小
+      core-pool-size: 4
+      # 最大线程池大小
+      max-pool-size: 8
+      # 状态检查间隔
+      check-interval: 60s
+      # 更新间隔
+      update-interval: 30s
+      # 调度器队列大小
+      queue-capacity: 1000
+      # 线程保活时间
+      keep-alive-time: 300s
+    
+    # 缓存配置
+    cache:
+      # 是否启用缓存
+      enabled: true
+      # 缓存类型 (local, redis, hybrid)
+      type: hybrid
+      # 缓存过期时间
+      expire-time: 10m
+      # 最大缓存大小
+      max-size: 1000
+      # 预热缓存大小
+      preload-size: 100
+      # 缓存刷新间隔
+      refresh-interval: 5m
+      
+      # 本地缓存配置
+      local:
+        # Caffeine缓存配置
+        caffeine:
+          initial-capacity: 100
+          maximum-size: 1000
+          expire-after-write: 10m
+          expire-after-access: 5m
+      
+      # Redis缓存配置
+      redis:
+        # Redis连接配置
+        host: localhost
+        port: 6379
+        database: 0
+        timeout: 5s
+        # 缓存前缀
+        key-prefix: "activity:"
+        # 序列化方式
+        serializer: json
+    
+    # 存储配置
+    storage:
+      # 存储类型 (mysql, postgresql, mongodb)
+      type: mysql
+      # 分区策略 (none, month, quarter, year)
+      partition-by: month
+      # 归档天数
+      archive-after-days: 90
+      # 清理天数
+      cleanup-after-days: 365
+      # 批量操作大小
+      batch-size: 1000
+      
+      # 数据库连接池配置
+      datasource:
+        # 初始连接数
+        initial-size: 5
+        # 最小空闲连接数
+        min-idle: 5
+        # 最大连接数
+        max-active: 20
+        # 连接超时时间
+        max-wait: 60s
+        # 连接验证查询
+        validation-query: "SELECT 1"
+        # 是否在获取连接时验证
+        test-on-borrow: true
+        # 是否在归还连接时验证
+        test-on-return: false
+        # 是否在空闲时验证连接
+        test-while-idle: true
+        # 空闲连接验证间隔
+        time-between-eviction-runs-millis: 60s
+    
+    # 奖励配置
+    reward:
+      # 最大重试次数
+      max-retry-times: 3
+      # 奖励领取过期天数
+      claim-expire-days: 7
+      # 批量发放大小
+      batch-size: 100
+      # 奖励队列大小
+      queue-size: 10000
+      # 是否启用异步发放
+      async-grant: true
+      # 异步处理线程数
+      async-threads: 4
+      
+      # 奖励限制配置
+      limits:
+        # 单次最大奖励数量
+        max-items-per-grant: 50
+        # 每日最大奖励发放次数
+        max-grants-per-day: 1000
+        # 奖励值上限
+        max-reward-value: 1000000
+    
+    # 进度配置
+    progress:
+      # 进度更新批量大小
+      batch-update-size: 100
+      # 进度计算线程数
+      calculation-threads: 2
+      # 是否启用进度缓存
+      cache-enabled: true
+      # 进度缓存时间
+      cache-duration: 5m
+      # 最大进度历史记录数
+      max-history-records: 1000
+    
+    # 事件配置
+    event:
+      # 是否启用事件系统
+      enabled: true
+      # 事件队列大小
+      queue-size: 10000
+      # 事件处理线程数
+      handler-threads: 4
+      # 事件批量处理大小
+      batch-size: 50
+      # 事件超时时间
+      timeout: 30s
+      
+      # 事件类型配置
+      types:
+        activity-start:
+          enabled: true
+          async: true
+        activity-end:
+          enabled: true
+          async: true
+        progress-update:
+          enabled: true
+          async: true
+          batch: true
+        reward-claim:
+          enabled: true
+          async: false
+        milestone-reach:
+          enabled: true
+          async: true
+    
+    # 监控配置
+    monitor:
+      # 是否启用监控
+      enabled: true
+      # 监控数据上报间隔
+      report-interval: 5m
+      # 指标保留时间
+      metrics-retention: 7d
+      # 是否启用性能监控
+      performance-monitoring: true
+      # 是否启用错误监控
+      error-monitoring: true
+      
+      # 监控指标配置
+      metrics:
+        # 活动参与度
+        participation:
+          enabled: true
+          interval: 1m
+        # 进度更新频率
+        progress-frequency:
+          enabled: true
+          interval: 30s
+        # 奖励发放统计
+        reward-stats:
+          enabled: true
+          interval: 5m
+        # 系统性能
+        system-performance:
+          enabled: true
+          interval: 1m
+      
+      # 告警配置
+      alerts:
+        # 是否启用告警
+        enabled: true
+        # 告警检查间隔
+        check-interval: 1m
+        
+        # 告警规则
+        rules:
+          # 错误率告警
+          error-rate:
+            threshold: 5
+            duration: 5m
+          # 响应时间告警
+          response-time:
+            threshold: 1000ms
+            duration: 3m
+          # 活动参与度告警
+          participation-rate:
+            threshold: 10
+            duration: 10m
+    
+    # 安全配置
+    security:
+      # 是否启用安全检查
+      enabled: true
+      # 防刷新配置
+      anti-fraud:
+        enabled: true
+        # 最大操作频率 (次/分钟)
+        max-operations-per-minute: 60
+        # 异常行为检测
+        anomaly-detection: true
+      
+      # 数据验证配置
+      validation:
+        # 是否启用数据验证
+        enabled: true
+        # 严格模式
+        strict-mode: false
+        # 验证规则
+        rules:
+          progress-increment:
+            max-value: 10000
+            min-value: 1
+          reward-quantity:
+            max-value: 1000000
+            min-value: 1
+    
+    # 国际化配置
+    i18n:
+      # 是否启用国际化
+      enabled: true
+      # 默认语言
+      default-locale: zh_CN
+      # 支持的语言列表
+      supported-locales:
+        - zh_CN
+        - en_US
+        - ja_JP
+        - ko_KR
+      # 消息文件路径
+      message-path: classpath:i18n/activity/messages
+    
+    # 开发配置
+    development:
+      # 是否启用开发模式
+      enabled: false
+      # 模拟数据
+      mock-data: false
+      # 日志级别
+      log-level: DEBUG
+      # 性能分析
+      profiling: false
+      # 热重载
+      hot-reload: true
