@@ -70,6 +70,7 @@
         <module>business/activity</module>
         <module>business/ranking</module>
         <module>business/logic</module>
+        <module>business/scene</module>
     </modules>
     
     <!-- 属性配置 -->
