@@ -1,0 +1,170 @@
+# 游戏逻辑服务配置模板
+# 文件名: application-logic.yml
+# 用途: 逻辑服务的配置模板，包含所有可配置参数
+# 说明: 此文件为配置模板，开发者可以根据实际需求进行调整
+
+game:
+  logic:
+    # 服务器配置
+    server:
+      id: logic-1                     # 服务器唯一标识
+      name: "逻辑服务器1"                # 服务器显示名称
+      max-players: 5000               # 最大玩家数
+      tick-rate: 20                   # 每秒tick次数
+      description: "游戏逻辑服务器"      # 服务器描述
+      maintenance-mode: false         # 维护模式
+      debug-mode: false               # 调试模式
+    
+    # Actor配置
+    actor:
+      player-actor-dispatcher: "game-dispatcher"     # 玩家Actor调度器
+      scene-actor-dispatcher: "scene-dispatcher"     # 场景Actor调度器
+      max-actors: 100000                             # 最大Actor数量
+      message-queue-size: 10000                      # 消息队列大小
+      actor-timeout: "PT30S"                         # Actor超时时间(ISO-8601格式)
+      enable-monitoring: true                        # 启用Actor监控
+    
+    # ECS配置
+    ecs:
+      world-update-interval: "PT0.05S"               # 世界更新间隔(50ms)
+      entity-pool-size: 10000                        # 实体池大小
+      component-pool-size: 50000                     # 组件池大小
+      enable-parallel-systems: true                  # 启用并行系统
+      system-threads: 8                              # 系统线程数(默认为CPU核心数)
+      enable-system-profiling: false                 # 启用系统性能监控
+    
+    # 场景配置
+    scene:
+      max-scenes: 100                                # 最大场景数
+      scene-capacity: 500                            # 单个场景容量
+      aoi-range: 100                                 # AOI(Area of Interest)范围
+      update-interval: "PT0.1S"                      # 场景更新间隔(100ms)
+      enable-preload: true                           # 启用场景预加载
+      idle-timeout: "PT10M"                          # 场景空闲超时(10分钟)
+    
+    # 功能开关
+    features:
+      enable-battle: true             # 启用战斗系统
+      enable-trade: true              # 启用交易系统
+      enable-guild: true              # 启用公会系统
+      enable-cross-server: false      # 启用跨服功能
+      enable-pvp: true                # 启用PVP
+      enable-pve: true                # 启用PVE
+      enable-chat: true               # 启用聊天系统
+      enable-friend: true             # 启用好友系统
+      enable-ranking: true            # 启用排行榜
+      enable-activity: true           # 启用活动系统
+    
+    # 性能配置
+    performance:
+      use-virtual-threads: true       # 使用虚拟线程(Java 21+)
+      batch-size: 100                 # 批处理大小
+      cache-size: 10000               # 缓存大小
+      worker-threads: 16              # 工作线程数
+      io-threads: 8                   # IO线程数
+      gc-optimization: true           # 垃圾回收优化
+      pre-allocate-memory: true       # 内存预分配
+      enable-profiling: false         # 启用性能监控
+      monitoring-interval: "PT30S"    # 监控间隔(30秒)
+
+# Spring Boot配置
+spring:
+  application:
+    name: game-logic-server
+  
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/game_logic?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 2000ms
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+  
+  # 缓存配置
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=600s
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver: INFO
+    com.lx.gameserver.business.logic: DEBUG
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+  file:
+    name: logs/logic-server.log
+    max-size: 100MB
+    max-history: 30
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /logic
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    connection-timeout: 20000ms
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  type-aliases-package: com.lx.gameserver.business.logic.*.entity

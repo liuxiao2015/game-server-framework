@@ -69,6 +69,7 @@
         <module>business/chat</module>
         <module>business/activity</module>
         <module>business/ranking</module>
+        <module>business/logic</module>
     </modules>
     
     <!-- 属性配置 -->
