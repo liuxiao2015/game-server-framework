@@ -41,6 +41,15 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class AbstractComponent implements Component {
     
     /**
+     * 获取组件类型ID
+     * 需要由子类实现，提供唯一的类型标识
+     *
+     * @return 组件类型ID
+     */
+    @Override
+    public abstract int getTypeId();
+    
+    /**
      * 组件类型ID生成器
      */
     private static final AtomicLong TYPE_ID_GENERATOR = new AtomicLong(1);

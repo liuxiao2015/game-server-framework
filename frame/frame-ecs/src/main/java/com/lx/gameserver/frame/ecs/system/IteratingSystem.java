@@ -171,6 +171,15 @@ public abstract class IteratingSystem extends AbstractSystem {
     }
     
     /**
+     * 获取符合条件的实体集合
+     *
+     * @return 实体集合
+     */
+    protected Collection<Entity> getEntities() {
+        return entityQuery.execute();
+    }
+    
+    /**
      * 处理单个实体
      *
      * @param entity 实体
