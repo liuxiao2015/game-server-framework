@@ -462,11 +462,34 @@ public class MessageBuilder {
         }
         
         @Override
-        public Instant getTimestamp() {
-            return timestamp;
+        public long getTimestamp() {
+            return timestamp.toEpochMilli();
         }
         
         @Override
+        public String getRouteKey() {
+            return routingKey;
+        }
+        
+        @Override
+        public void setRouteKey(String routeKey) {
+            // BuiltMessage is immutable, so we can't change the routing key after creation
+            throw new UnsupportedOperationException("BuiltMessage is immutable, cannot modify routeKey");
+        }
+        
+        @Override
+        public void setSender(ActorRef sender) {
+            // BuiltMessage is immutable, so we can't change the sender after creation
+            throw new UnsupportedOperationException("BuiltMessage is immutable, cannot modify sender");
+        }
+        
+        /**
+         * Get the timestamp as Instant for internal use
+         */
+        public Instant getTimestampAsInstant() {
+            return timestamp;
+        }
+        
         public Map<String, String> getRoutingInfo() {
             Map<String, String> routing = new HashMap<>();
             if (routingKey != null) {
@@ -482,7 +505,7 @@ public class MessageBuilder {
             if (priorityCompare != 0) {
                 return priorityCompare;
             }
-            return this.timestamp.compareTo(other.getTimestamp());
+            return Long.compare(this.getTimestamp(), other.getTimestamp());
         }
         
         public T getPayload() {

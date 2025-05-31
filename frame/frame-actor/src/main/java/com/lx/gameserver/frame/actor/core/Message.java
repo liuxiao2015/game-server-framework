@@ -85,6 +85,21 @@ public interface Message extends Serializable, Comparable<Message> {
     void setRouteKey(String routeKey);
     
     /**
+     * 获取消息路由信息（用于路由决策）
+     *
+     * @return 路由信息映射，包含路由决策所需的各种信息
+     */
+    default java.util.Map<String, String> getRoutingInfo() {
+        java.util.Map<String, String> routingInfo = new java.util.HashMap<>();
+        if (getRouteKey() != null) {
+            routingInfo.put("routeKey", getRouteKey());
+        }
+        routingInfo.put("messageType", getMessageType());
+        routingInfo.put("priority", String.valueOf(getPriority()));
+        return routingInfo;
+    }
+    
+    /**
      * 检查消息是否有效
      *
      * @return 如果消息有效返回true

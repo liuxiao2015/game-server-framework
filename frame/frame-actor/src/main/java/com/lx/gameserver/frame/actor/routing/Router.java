@@ -81,9 +81,10 @@ public abstract class Router {
         if (actorRef != null && !routees.contains(actorRef)) {
             routees.add(actorRef);
             logger.debug("路由器[{}]添加routee: {}", name, actorRef);
+            onRouteesChanged();
         }
     }
-    
+
     /**
      * 移除routee
      *
@@ -92,6 +93,7 @@ public abstract class Router {
     public void removeRoutee(ActorRef actorRef) {
         if (routees.remove(actorRef)) {
             logger.debug("路由器[{}]移除routee: {}", name, actorRef);
+            onRouteesChanged();
         }
     }
     
@@ -175,6 +177,15 @@ public abstract class Router {
         messageCount.incrementAndGet();
     }
     
+    /**
+     * routee变化时的回调方法
+     * 子类可以重写此方法来响应routee的变化
+     */
+    protected void onRouteesChanged() {
+        // 默认实现为空，子类可以重写
+        logger.debug("路由器[{}]的routee发生变化，当前数量: {}", name, routees.size());
+    }
+
     /**
      * 获取路由统计信息
      *

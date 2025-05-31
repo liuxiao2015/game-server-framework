@@ -107,7 +107,7 @@ public class ECSDebugger {
      */
     public static class SystemDebugInfo {
         private final String systemName;
-        private final Class<? extends System> systemClass;
+        private final Class<? extends com.lx.gameserver.frame.ecs.core.System> systemClass;
         private final boolean enabled;
         private final int priority;
         private final Set<String> dependencies;
@@ -117,7 +117,7 @@ public class ECSDebugger {
         private volatile long minExecutionTime = Long.MAX_VALUE;
         private volatile long maxExecutionTime = 0;
         
-        public SystemDebugInfo(String systemName, Class<? extends System> systemClass, 
+        public SystemDebugInfo(String systemName, Class<? extends com.lx.gameserver.frame.ecs.core.System> systemClass, 
                               boolean enabled, int priority, Set<String> dependencies) {
             this.systemName = systemName;
             this.systemClass = systemClass;
@@ -149,7 +149,7 @@ public class ECSDebugger {
         
         // Getters
         public String getSystemName() { return systemName; }
-        public Class<? extends System> getSystemClass() { return systemClass; }
+        public Class<? extends com.lx.gameserver.frame.ecs.core.System> getSystemClass() { return systemClass; }
         public boolean isEnabled() { return enabled; }
         public int getPriority() { return priority; }
         public Set<String> getDependencies() { return dependencies; }

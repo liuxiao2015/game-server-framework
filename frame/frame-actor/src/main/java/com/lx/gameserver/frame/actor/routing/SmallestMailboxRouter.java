@@ -59,19 +59,28 @@ public class SmallestMailboxRouter extends Router {
     private final int loadBalanceThreshold;
     
     public SmallestMailboxRouter(String name, RouterConfig config, Duration cacheUpdateInterval, int loadBalanceThreshold) {
-        super(name, config);
+        super(name);
         this.cacheUpdateInterval = cacheUpdateInterval;
         this.loadBalanceThreshold = loadBalanceThreshold;
         
         logger.info("最小邮箱路由器[{}]初始化完成，缓存更新间隔: {}, 负载均衡阈值: {}", 
                 name, cacheUpdateInterval, loadBalanceThreshold);
     }
-    
+
     public SmallestMailboxRouter(String name, RouterConfig config) {
         this(name, config, Duration.ofMillis(100), 10);
     }
-    
+
+    public SmallestMailboxRouter(String name) {
+        this(name, null, Duration.ofMillis(100), 10);
+    }
+
     @Override
+    public RouteResult route(Object message, ActorRef sender) {
+        recordRouteSuccess();
+        return selectRoutees(message, sender);
+    }
+
     protected RouteResult selectRoutees(Object message, ActorRef sender) {
         List<ActorRef> routees = getRoutees();
         

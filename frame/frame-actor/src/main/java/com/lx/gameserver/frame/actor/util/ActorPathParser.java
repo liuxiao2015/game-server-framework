@@ -352,9 +352,10 @@ public class ActorPathParser {
         // 找到公共前缀
         List<String> commonElements = new ArrayList<>();
         for (int i = 0; i < minLength; i++) {
-            String element = parsedPaths.get(0).getElements().get(i);
+            final int index = i; // Make index final for lambda
+            final String element = parsedPaths.get(0).getElements().get(i);
             boolean allMatch = parsedPaths.stream()
-                    .allMatch(p -> element.equals(p.getElements().get(i)));
+                    .allMatch(p -> element.equals(p.getElements().get(index)));
             
             if (allMatch) {
                 commonElements.add(element);
