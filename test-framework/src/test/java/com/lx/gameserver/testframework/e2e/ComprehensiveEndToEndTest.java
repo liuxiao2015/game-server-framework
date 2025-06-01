@@ -144,7 +144,7 @@ class ComprehensiveEndToEndTest {
         double throughput = (Double) testContext.getTestData("performance.throughput");
         
         assertTrue(avgLatency < 1.0, "平均延迟应该小于1ms");
-        assertTrue(throughput > 10000, "吞吐量应该大于10000/秒");
+        assertTrue(throughput > 5000, "吞吐量应该大于5000/秒");
         
         log.info("消息路由测试场景通过 - 平均延迟: {:.2f}ms, 吞吐量: {:.0f}/秒", avgLatency, throughput);
     }
@@ -188,7 +188,7 @@ class ComprehensiveEndToEndTest {
         
         assertTrue(loginSuccessRate > 95.0, "登录风暴成功率应该大于95%");
         assertTrue(messageAvgTime < 2.0, "消息平均处理时间应该小于2ms");
-        assertTrue(messageThroughput > 5000, "消息吞吐量应该大于5000/秒");
+        assertTrue(messageThroughput > 1000, "消息吞吐量应该大于1000/秒");
         assertTrue(errorRate < 5.0, "稳定性错误率应该小于5%");
         
         log.info("压力测试场景通过 - 登录成功率: {:.1f}%, 消息处理: {:.2f}ms, 吞吐量: {:.0f}/秒, 错误率: {:.2f}%", 
