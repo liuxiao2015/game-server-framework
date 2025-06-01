@@ -1,0 +1,102 @@
+# 多实例部署配置示例
+# 启用多实例模式
+game:
+  multi-instance:
+    enabled: true
+    services:
+      # 逻辑服务器
+      logic-server:
+        instances: 3
+        base-port: 9000
+        port-increment: 1
+        load-balance-enabled: true
+        load-balance-strategy: ROUND_ROBIN
+        health-check-interval: 30
+        isolation-enabled: true
+      
+      # 场景服务器
+      scene-server:
+        instances: 5
+        base-port: 9100
+        port-increment: 1
+        load-balance-enabled: true
+        load-balance-strategy: LEAST_CONNECTIONS
+        health-check-interval: 30
+        isolation-enabled: true
+      
+      # 网关服务器
+      gateway-server:
+        instances: 2
+        base-port: 8000
+        port-increment: 1
+        load-balance-enabled: true
+        load-balance-strategy: WEIGHTED_RESPONSE_TIME
+        health-check-interval: 15
+        isolation-enabled: true
+      
+      # 聊天服务器
+      chat-server:
+        instances: 2
+        base-port: 9200
+        port-increment: 1
+        load-balance-enabled: true
+        load-balance-strategy: CONSISTENT_HASH
+        health-check-interval: 30
+        isolation-enabled: true
+
+# 服务间通信配置
+dubbo:
+  application:
+    name: game-server-framework
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    address: nacos://localhost:8848
+
+# 数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/game_server?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: password
+    
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 3000ms
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 8081
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver: DEBUG
+    org.springframework: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] - %msg%n"
+  file:
+    name: logs/game-server-framework.log
+    max-size: 100MB
+    max-history: 30
