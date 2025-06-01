@@ -1,0 +1,165 @@
+# 游戏服务器测试框架配置文件
+# 用途: 测试框架的主要配置
+# 作者: liuxiao2015
+# 日期: 2025-06-01
+
+spring:
+  application:
+    name: test-framework
+  profiles:
+    active: local
+  
+  # 日志配置
+  logging:
+    level:
+      com.lx.gameserver.testframework: DEBUG
+      org.springframework: INFO
+      org.junit: DEBUG
+    pattern:
+      console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx'
+
+# 测试框架配置
+test:
+  framework:
+    # 基础配置
+    base:
+      parallel-execution: true
+      max-parallel-tests: 10
+      timeout: PT5M  # 5分钟
+      retry-count: 3
+      continue-on-failure: true
+    
+    # 环境配置
+    environments:
+      local:
+        name: "本地环境"
+        description: "本地开发测试环境"
+        default-environment: true
+        services:
+          - name: redis
+            image: redis:7-alpine
+            port: 6379
+            startup-timeout: PT2M
+            health-check-url: "redis://localhost:6379"
+          - name: mysql
+            image: mysql:8.0
+            port: 3306
+            startup-timeout: PT3M
+            environment:
+              MYSQL_ROOT_PASSWORD: test123
+              MYSQL_DATABASE: gameserver_test
+        variables:
+          ENV: local
+          DEBUG: true
+      
+      integration:
+        name: "集成测试环境"
+        description: "持续集成测试环境"
+        services:
+          - name: mysql
+            image: mysql:8.0
+            port: 3306
+            startup-timeout: PT3M
+            environment:
+              MYSQL_ROOT_PASSWORD: test123
+              MYSQL_DATABASE: gameserver_test
+          - name: redis
+            image: redis:7-alpine
+            port: 6379
+            startup-timeout: PT2M
+        variables:
+          ENV: integration
+          DEBUG: false
+    
+    # 性能测试配置
+    performance:
+      warm-up-duration: PT1M      # 1分钟预热
+      test-duration: PT5M         # 5分钟测试
+      ramp-up-time: PT30S         # 30秒递增
+      target-tps: 10000           # 目标TPS
+      max-concurrency: 1000       # 最大并发
+      sampling-interval: PT1S     # 1秒采样间隔
+    
+    # 压力测试配置
+    stress:
+      max-clients: 10000
+      connection-rate: "100/s"
+      message-rate: "1000/s"
+      duration: PT10M             # 10分钟压力测试
+      ramp-up-strategy: "linear"
+      test-scenarios:
+        - "login-storm"
+        - "battle-stress"
+        - "message-flood"
+    
+    # 报告配置
+    report:
+      format: "html"
+      include-logs: true
+      screenshot-on-failure: true
+      retention-days: 30
+      output-directory: "target/test-reports"
+      email:
+        enabled: false
+        smtp-host: "smtp.example.com"
+        smtp-port: 587
+        username: "test@example.com"
+        password: "password"
+        from: "test@example.com"
+        recipients:
+          - "dev-team@example.com"
+    
+    # 监控配置
+    monitor:
+      metrics-interval: PT10S     # 10秒采集间隔
+      resource-monitor: true
+      alert-threshold:
+        cpu: 80                   # CPU使用率80%告警
+        memory: 90                # 内存使用率90%告警
+        error-rate: 5             # 错误率5%告警
+        response-time: 1000       # 响应时间1000ms告警
+      prometheus:
+        enabled: false
+        server-url: "http://localhost:9090"
+        metrics-prefix: "test_framework"
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: local
+
+logging:
+  level:
+    com.lx.gameserver.testframework: DEBUG
+
+test:
+  framework:
+    base:
+      parallel-execution: true
+      max-parallel-tests: 5
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: production
+
+logging:
+  level:
+    root: WARN
+    com.lx.gameserver.testframework: INFO
+
+test:
+  framework:
+    base:
+      parallel-execution: true
+      max-parallel-tests: 20
+    monitor:
+      prometheus:
+        enabled: true
+    report:
+      email:
+        enabled: true
