@@ -222,12 +222,11 @@ public class MockFactory {
     /**
      * 配置Mock行为 - 当调用方法时返回值
      * 
-     * @param mockObject Mock对象
      * @param methodCall 方法调用
      * @param returnValue 返回值
      * @param <T> 返回值类型
      */
-    public <T> void when(Object mockObject, T methodCall, T returnValue) {
+    public <T> void whenThenReturn(T methodCall, T returnValue) {
         when(methodCall).thenReturn(returnValue);
         log.debug("配置Mock行为: {} -> {}", methodCall, returnValue);
     }
@@ -235,12 +234,11 @@ public class MockFactory {
     /**
      * 配置Mock行为 - 当调用方法时抛出异常
      * 
-     * @param mockObject Mock对象
      * @param methodCall 方法调用
      * @param exception 异常
      * @param <T> 返回值类型
      */
-    public <T> void whenThrow(Object mockObject, T methodCall, Throwable exception) {
+    public <T> void whenThenThrow(T methodCall, Throwable exception) {
         when(methodCall).thenThrow(exception);
         log.debug("配置Mock异常行为: {} -> {}", methodCall, exception.getClass().getSimpleName());
     }

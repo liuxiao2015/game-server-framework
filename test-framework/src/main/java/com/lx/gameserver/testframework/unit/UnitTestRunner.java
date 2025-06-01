@@ -2,18 +2,15 @@
  * 文件名: UnitTestRunner.java
  * 用途: 单元测试运行器
  * 内容: 
- *   - JUnit 5集成和测试执行
- *   - 参数化测试支持
+ *   - 简化的单元测试执行
  *   - Mock框架集成
  *   - 测试覆盖率统计
  *   - 测试隔离机制
  * 技术选型: 
- *   - JUnit 5平台
- *   - Mockito框架
  *   - 反射API
+ *   - Mockito框架
  *   - 注解驱动
  * 依赖关系: 
- *   - 依赖JUnit 5引擎
  *   - 依赖Mockito框架
  *   - 依赖MockFactory
  * 作者: liuxiao2015
@@ -23,19 +20,19 @@ package com.lx.gameserver.testframework.unit;
 
 import com.lx.gameserver.testframework.core.TestContext;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.platform.engine.discovery.DiscoverySelectors;
-import org.junit.platform.launcher.*;
-import org.junit.platform.launcher.core.LauncherFactory;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 单元测试运行器
  * <p>
- * 集成JUnit 5平台，提供单元测试的执行、管理和结果收集功能，
- * 支持参数化测试、Mock对象和测试隔离。
+ * 简化的单元测试执行器，提供基本的测试运行、管理和结果收集功能，
+ * 支持Mock对象和测试隔离。
  * </p>
  * 
  * @author liuxiao2015
@@ -47,19 +44,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UnitTestRunner {
     
     /**
-     * JUnit 5启动器
-     */
-    private final Launcher launcher;
-    
-    /**
-     * 测试结果收集器
-     */
-    private final TestResultCollector resultCollector;
-    
-    /**
      * Mock工厂
      */
     private final MockFactory mockFactory;
+    
+    /**
+     * 测试数据构建器
+     */
+    private final TestDataBuilder testDataBuilder;
     
     /**
      * 测试执行配置
@@ -70,9 +62,8 @@ public class UnitTestRunner {
      * 构造函数
      */
     public UnitTestRunner() {
-        this.launcher = LauncherFactory.create();
-        this.resultCollector = new TestResultCollector();
         this.mockFactory = new MockFactory();
+        this.testDataBuilder = new TestDataBuilder();
         this.executionConfig = new ConcurrentHashMap<>();
         
         // 设置默认配置
@@ -93,20 +84,25 @@ public class UnitTestRunner {
         
         log.info("开始运行单元测试类: {}", testClass.getSimpleName());
         
+        Instant startTime = Instant.now();
+        List<TestMethodResult> methodResults = new ArrayList<>();
+        
         try {
             // 准备测试环境
             prepareTestEnvironment(context);
             
-            // 配置测试发现
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectClass(testClass))
-                .build();
+            // 获取测试方法
+            Method[] testMethods = findTestMethods(testClass);
             
-            // 执行测试
-            launcher.execute(request, resultCollector);
+            // 执行测试方法
+            for (Method method : testMethods) {
+                TestMethodResult result = runTestMethod(testClass, method, context);
+                methodResults.add(result);
+            }
             
-            // 收集结果
-            UnitTestResult result = resultCollector.getResult();
+            // 计算总体结果
+            Duration duration = Duration.between(startTime, Instant.now());
+            UnitTestResult result = aggregateResults(testClass.getSimpleName(), methodResults, duration);
             
             log.info("单元测试类 {} 执行完成: 成功={}, 失败={}", 
                 testClass.getSimpleName(), result.getSuccessfulTests(), result.getFailedTests());
@@ -115,7 +111,8 @@ public class UnitTestRunner {
             
         } catch (Exception e) {
             log.error("运行单元测试类失败: {}", testClass.getSimpleName(), e);
-            return UnitTestResult.failure(testClass.getSimpleName(), e);
+            Duration duration = Duration.between(startTime, Instant.now());
+            return UnitTestResult.failure(testClass.getSimpleName(), duration, e);
         } finally {
             // 清理测试环境
             cleanupTestEnvironment();
@@ -123,89 +120,44 @@ public class UnitTestRunner {
     }
     
     /**
-     * 运行包下的所有测试
-     * 
-     * @param packageName 包名
-     * @param context 测试上下文
-     * @return 测试结果
-     */
-    public UnitTestResult runTestPackage(String packageName, TestContext context) {
-        if (packageName == null || packageName.trim().isEmpty()) {
-            throw new IllegalArgumentException("包名不能为空");
-        }
-        
-        log.info("开始运行包下的单元测试: {}", packageName);
-        
-        try {
-            // 准备测试环境
-            prepareTestEnvironment(context);
-            
-            // 配置测试发现
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectPackage(packageName))
-                .build();
-            
-            // 执行测试
-            launcher.execute(request, resultCollector);
-            
-            // 收集结果
-            UnitTestResult result = resultCollector.getResult();
-            
-            log.info("包 {} 下的单元测试执行完成: 成功={}, 失败={}", 
-                packageName, result.getSuccessfulTests(), result.getFailedTests());
-            
-            return result;
-            
-        } catch (Exception e) {
-            log.error("运行包下的单元测试失败: {}", packageName, e);
-            return UnitTestResult.failure(packageName, e);
-        } finally {
-            // 清理测试环境
-            cleanupTestEnvironment();
-        }
-    }
-    
-    /**
-     * 运行指定的测试方法
+     * 运行单个测试方法
      * 
      * @param testClass 测试类
-     * @param methodName 方法名
+     * @param testMethod 测试方法
      * @param context 测试上下文
-     * @return 测试结果
+     * @return 测试方法结果
      */
-    public UnitTestResult runTestMethod(Class<?> testClass, String methodName, TestContext context) {
-        if (testClass == null || methodName == null) {
-            throw new IllegalArgumentException("测试类和方法名不能为空");
-        }
+    public TestMethodResult runTestMethod(Class<?> testClass, Method testMethod, TestContext context) {
+        String methodName = testMethod.getName();
+        log.debug("运行测试方法: {}.{}", testClass.getSimpleName(), methodName);
         
-        log.info("开始运行单元测试方法: {}.{}", testClass.getSimpleName(), methodName);
+        Instant startTime = Instant.now();
         
         try {
-            // 准备测试环境
-            prepareTestEnvironment(context);
+            // 创建测试实例
+            Object testInstance = testClass.getDeclaredConstructor().newInstance();
             
-            // 配置测试发现
-            LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-                .selectors(DiscoverySelectors.selectMethod(testClass, methodName))
-                .build();
+            // 执行前置方法
+            executeBeforeMethods(testInstance);
             
-            // 执行测试
-            launcher.execute(request, resultCollector);
+            // 执行测试方法
+            testMethod.invoke(testInstance);
             
-            // 收集结果
-            UnitTestResult result = resultCollector.getResult();
+            // 执行后置方法
+            executeAfterMethods(testInstance);
             
-            log.info("单元测试方法 {}.{} 执行完成: 成功={}, 失败={}", 
-                testClass.getSimpleName(), methodName, result.getSuccessfulTests(), result.getFailedTests());
+            Duration duration = Duration.between(startTime, Instant.now());
+            log.debug("测试方法 {}.{} 执行成功 (耗时: {}ms)", 
+                testClass.getSimpleName(), methodName, duration.toMillis());
             
-            return result;
+            return TestMethodResult.success(methodName, duration);
             
         } catch (Exception e) {
-            log.error("运行单元测试方法失败: {}.{}", testClass.getSimpleName(), methodName, e);
-            return UnitTestResult.failure(testClass.getSimpleName() + "." + methodName, e);
-        } finally {
-            // 清理测试环境
-            cleanupTestEnvironment();
+            Duration duration = Duration.between(startTime, Instant.now());
+            log.error("测试方法 {}.{} 执行失败 (耗时: {}ms)", 
+                testClass.getSimpleName(), methodName, duration.toMillis(), e);
+            
+            return TestMethodResult.failure(methodName, duration, e);
         }
     }
     
@@ -241,16 +193,24 @@ public class UnitTestRunner {
     }
     
     /**
+     * 获取测试数据构建器
+     * 
+     * @return 测试数据构建器
+     */
+    public TestDataBuilder getTestDataBuilder() {
+        return testDataBuilder;
+    }
+    
+    /**
      * 初始化默认配置
      */
     private void initializeDefaultConfig() {
         log.debug("初始化单元测试运行器默认配置...");
         
         // 设置默认配置
-        setConfig("junit.jupiter.execution.parallel.enabled", true);
-        setConfig("junit.jupiter.execution.parallel.mode.default", "concurrent");
-        setConfig("junit.jupiter.execution.parallel.config.strategy", "dynamic");
-        setConfig("junit.jupiter.testinstance.lifecycle.default", "per_class");
+        setConfig("parallel.enabled", false);
+        setConfig("timeout.default", 30000L);
+        setConfig("retry.count", 0);
         
         log.debug("单元测试运行器默认配置初始化完成");
     }
@@ -263,18 +223,8 @@ public class UnitTestRunner {
     private void prepareTestEnvironment(TestContext context) {
         log.debug("准备单元测试环境...");
         
-        // 重置结果收集器
-        resultCollector.reset();
-        
         // 初始化Mock工厂
         mockFactory.initialize(context);
-        
-        // 设置系统属性
-        executionConfig.forEach((key, value) -> {
-            if (key.startsWith("junit.")) {
-                System.setProperty(key, String.valueOf(value));
-            }
-        });
         
         log.debug("单元测试环境准备完成");
     }
@@ -289,11 +239,6 @@ public class UnitTestRunner {
             // 清理Mock工厂
             mockFactory.cleanup();
             
-            // 清理系统属性
-            executionConfig.keySet().stream()
-                .filter(key -> key.startsWith("junit."))
-                .forEach(System::clearProperty);
-            
             log.debug("单元测试环境清理完成");
             
         } catch (Exception e) {
@@ -302,66 +247,100 @@ public class UnitTestRunner {
     }
     
     /**
-     * 测试结果收集器
+     * 查找测试方法
+     * 
+     * @param testClass 测试类
+     * @return 测试方法数组
      */
-    private static class TestResultCollector implements TestExecutionListener {
-        private int totalTests = 0;
-        private int successfulTests = 0;
-        private int failedTests = 0;
-        private int skippedTests = 0;
-        private final List<TestFailure> failures = new ArrayList<>();
-        private long startTime;
-        private long endTime;
-        
-        @Override
-        public void executionStarted(TestIdentifier testIdentifier) {
-            if (testIdentifier.isTest()) {
-                if (totalTests == 0) {
-                    startTime = System.currentTimeMillis();
-                }
-                totalTests++;
+    private Method[] findTestMethods(Class<?> testClass) {
+        return Arrays.stream(testClass.getDeclaredMethods())
+            .filter(method -> method.getName().startsWith("test") || 
+                             method.isAnnotationPresent(org.junit.jupiter.api.Test.class))
+            .toArray(Method[]::new);
+    }
+    
+    /**
+     * 执行前置方法
+     * 
+     * @param testInstance 测试实例
+     */
+    private void executeBeforeMethods(Object testInstance) throws Exception {
+        Method[] methods = testInstance.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().startsWith("setUp") || 
+                method.isAnnotationPresent(org.junit.jupiter.api.BeforeEach.class)) {
+                method.setAccessible(true);
+                method.invoke(testInstance);
             }
         }
-        
-        @Override
-        public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
-            if (testIdentifier.isTest()) {
-                switch (testExecutionResult.getStatus()) {
-                    case SUCCESSFUL:
-                        successfulTests++;
-                        break;
-                    case FAILED:
-                        failedTests++;
-                        testExecutionResult.getThrowable().ifPresent(throwable -> 
-                            failures.add(new TestFailure(testIdentifier.getDisplayName(), throwable)));
-                        break;
-                    case ABORTED:
-                        skippedTests++;
-                        break;
-                }
-                
-                if (successfulTests + failedTests + skippedTests >= totalTests) {
-                    endTime = System.currentTimeMillis();
-                }
+    }
+    
+    /**
+     * 执行后置方法
+     * 
+     * @param testInstance 测试实例
+     */
+    private void executeAfterMethods(Object testInstance) throws Exception {
+        Method[] methods = testInstance.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().startsWith("tearDown") || 
+                method.isAnnotationPresent(org.junit.jupiter.api.AfterEach.class)) {
+                method.setAccessible(true);
+                method.invoke(testInstance);
             }
         }
+    }
+    
+    /**
+     * 聚合测试结果
+     * 
+     * @param testName 测试名称
+     * @param methodResults 方法结果列表
+     * @param duration 总耗时
+     * @return 聚合结果
+     */
+    private UnitTestResult aggregateResults(String testName, List<TestMethodResult> methodResults, Duration duration) {
+        int total = methodResults.size();
+        int successful = (int) methodResults.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
+        int failed = total - successful;
         
-        public UnitTestResult getResult() {
-            return new UnitTestResult(
-                totalTests, successfulTests, failedTests, skippedTests,
-                endTime - startTime, failures
-            );
+        List<TestFailure> failures = methodResults.stream()
+            .filter(r -> !r.isSuccess())
+            .map(r -> new TestFailure(r.getMethodName(), r.getException()))
+            .toList();
+        
+        return new UnitTestResult(total, successful, failed, 0, duration.toMillis(), failures);
+    }
+    
+    /**
+     * 测试方法结果
+     */
+    public static class TestMethodResult {
+        private final String methodName;
+        private final boolean success;
+        private final Duration duration;
+        private final Throwable exception;
+        
+        private TestMethodResult(String methodName, boolean success, Duration duration, Throwable exception) {
+            this.methodName = methodName;
+            this.success = success;
+            this.duration = duration;
+            this.exception = exception;
         }
         
-        public void reset() {
-            totalTests = 0;
-            successfulTests = 0;
-            failedTests = 0;
-            skippedTests = 0;
-            failures.clear();
-            startTime = 0;
-            endTime = 0;
+        public static TestMethodResult success(String methodName, Duration duration) {
+            return new TestMethodResult(methodName, true, duration, null);
         }
+        
+        public static TestMethodResult failure(String methodName, Duration duration, Throwable exception) {
+            return new TestMethodResult(methodName, false, duration, exception);
+        }
+        
+        // Getters
+        public String getMethodName() { return methodName; }
+        public boolean isSuccess() { return success; }
+        public Duration getDuration() { return duration; }
+        public Throwable getException() { return exception; }
     }
     
     /**
@@ -401,8 +380,8 @@ public class UnitTestRunner {
             this.failures = new ArrayList<>(failures);
         }
         
-        public static UnitTestResult failure(String testName, Exception exception) {
-            return new UnitTestResult(1, 0, 1, 0, 0, 
+        public static UnitTestResult failure(String testName, Duration duration, Exception exception) {
+            return new UnitTestResult(1, 0, 1, 0, duration.toMillis(), 
                 List.of(new TestFailure(testName, exception)));
         }
         

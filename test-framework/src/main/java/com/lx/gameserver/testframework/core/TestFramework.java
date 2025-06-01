@@ -101,7 +101,7 @@ public class TestFramework {
         this.testSuites = new ConcurrentHashMap<>();
         this.plugins = new ConcurrentHashMap<>();
         this.listeners = new ArrayList<>();
-        this.executorService = Executors.newVirtualThreadPerTaskExecutor();
+        this.executorService = Executors.newCachedThreadPool();
         this.state = FrameworkState.UNINITIALIZED;
     }
     

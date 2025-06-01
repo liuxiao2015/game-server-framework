@@ -29,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.function.Executable;
 
 /**
  * 游戏服务器测试用例基类
@@ -262,7 +263,7 @@ public abstract class TestCase {
      * @return 抛出的异常
      */
     protected <T extends Throwable> T assertThrows(Class<T> expectedType, 
-                                                   ThrowingExecutable executable) {
+                                                   Executable executable) {
         return org.junit.jupiter.api.Assertions.assertThrows(expectedType, executable);
     }
     
@@ -272,7 +273,7 @@ public abstract class TestCase {
      * @param timeout 超时时间
      * @param executable 可执行代码
      */
-    protected void assertTimeout(Duration timeout, ThrowingExecutable executable) {
+    protected void assertTimeout(Duration timeout, Executable executable) {
         org.junit.jupiter.api.Assertions.assertTimeout(timeout, executable);
     }
     
@@ -393,15 +394,13 @@ public abstract class TestCase {
         }
         
         // 使用超时执行
-        assertTimeout(Duration.ofMillis(timeoutMillis), this::runTest);
-    }
-    
-    /**
-     * 抛出异常的可执行接口
-     */
-    @FunctionalInterface
-    public interface ThrowingExecutable {
-        void execute() throws Exception;
+        assertTimeout(Duration.ofMillis(timeoutMillis), () -> {
+            try {
+                runTest();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
     
     /**
