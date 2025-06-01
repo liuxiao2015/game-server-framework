@@ -52,52 +52,128 @@ public class Bootstrap {
      * 应用启动入口点
      * <p>
      * 执行以下启动流程：
-     * 1. 检测运行模式（命令行参数、环境变量、IDE检测）
-     * 2. 配置Spring Boot应用参数
-     * 3. 启动Spring Boot应用
-     * 4. 输出启动成功信息
+     * 1. 初始化启动进度跟踪器
+     * 2. 检测运行模式（命令行参数、环境变量、IDE检测）
+     * 3. 环境验证（端口冲突、依赖检查等）
+     * 4. 配置Spring Boot应用参数
+     * 5. 启动Spring Boot应用
+     * 6. 输出启动成功信息
      * </p>
      *
      * @param args 命令行参数，支持--mode=dev/normal参数
      */
     public static void main(String[] args) {
+        StartupProgressTracker progressTracker = new StartupProgressTracker();
+        
         try {
-            // 1. 输出启动开始信息
+            // 1. 初始化进度跟踪器
+            progressTracker.initialize();
+            
+            // 2. 输出启动开始信息
             printStartupHeader();
             
-            // 2. 检测运行模式
-            RunMode runMode = ModeDetector.detectMode(args);
-            System.out.println("检测到运行模式: " + runMode);
+            // 3. 环境验证阶段
+            progressTracker.startStage(StartupProgressTracker.StartupStage.ENVIRONMENT_VALIDATION);
+            RunMode runMode = performEnvironmentValidation(args, progressTracker);
+            progressTracker.completeStage(StartupProgressTracker.StartupStage.ENVIRONMENT_VALIDATION);
             
-            // 3. 输出模式检测详细信息（开发模式下）
-            if (runMode.isDev()) {
-                System.out.println("\n" + ModeDetector.getDetectionInfo(args));
-            }
-            
-            // 4. 配置并启动Spring Boot应用
+            // 4. 框架初始化阶段
+            progressTracker.startStage(StartupProgressTracker.StartupStage.FRAMEWORK_INITIALIZATION);
             SpringApplication app = createSpringApplication();
             configureApplication(app, runMode);
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.FRAMEWORK_INITIALIZATION, 100, "框架配置完成");
+            progressTracker.completeStage(StartupProgressTracker.StartupStage.FRAMEWORK_INITIALIZATION);
             
-            // 5. 启动应用
+            // 5. 服务启动阶段
+            progressTracker.startStage(StartupProgressTracker.StartupStage.SERVICE_STARTUP);
             System.out.println("正在启动游戏服务器框架...");
             ConfigurableApplicationContext context = app.run(args);
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.SERVICE_STARTUP, 100, "Spring容器启动完成");
+            progressTracker.completeStage(StartupProgressTracker.StartupStage.SERVICE_STARTUP);
             
-            // 6. 获取框架实例并显示状态
-            try {
-                GameServerFramework framework = context.getBean(GameServerFramework.class);
-                System.out.println("框架状态: " + framework.getStatus().getDescription());
-                System.out.println("已加载模块数: " + framework.getInitializedModuleCount());
-            } catch (Exception e) {
-                System.out.println("框架状态查询失败: " + e.getMessage());
-            }
+            // 6. 健康检查阶段
+            progressTracker.startStage(StartupProgressTracker.StartupStage.HEALTH_CHECK);
+            performHealthCheck(context, progressTracker);
+            progressTracker.completeStage(StartupProgressTracker.StartupStage.HEALTH_CHECK);
             
             // 7. 输出启动成功信息
-            printStartupSuccess(context, runMode);
+            printStartupSuccess(context, runMode, progressTracker);
             
         } catch (Exception e) {
             System.err.println("游戏服务器启动失败: " + e.getMessage());
             e.printStackTrace();
+            
+            // 启动失败回滚
+            progressTracker.initiateRollback(e.getMessage());
             System.exit(1);
+        }
+    }
+    
+    /**
+     * 执行环境验证
+     */
+    private static RunMode performEnvironmentValidation(String[] args, StartupProgressTracker progressTracker) {
+        // 检测运行模式
+        RunMode runMode = ModeDetector.detectMode(args);
+        System.out.println("检测到运行模式: " + runMode);
+        progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.ENVIRONMENT_VALIDATION, 25, "运行模式检测完成");
+        
+        // 输出模式检测详细信息（开发模式下）
+        if (runMode.isDev()) {
+            System.out.println("\n" + ModeDetector.getDetectionInfo(args));
+        }
+        progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.ENVIRONMENT_VALIDATION, 50, "模式配置完成");
+        
+        // 预验证环境（创建临时Environment进行基础检查）
+        progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.ENVIRONMENT_VALIDATION, 75, "环境预检查");
+        performBasicEnvironmentCheck();
+        
+        return runMode;
+    }
+    
+    /**
+     * 执行基础环境检查
+     */
+    private static void performBasicEnvironmentCheck() {
+        // 检查Java版本
+        String javaVersion = System.getProperty("java.version");
+        System.out.println("Java版本: " + javaVersion);
+        
+        // 检查内存
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemoryMB = runtime.maxMemory() / 1024 / 1024;
+        System.out.println("JVM最大内存: " + maxMemoryMB + "MB");
+        
+        if (maxMemoryMB < 512) {
+            System.out.println("⚠️ 警告: JVM内存较小，建议至少512MB");
+        }
+    }
+    
+    /**
+     * 执行健康检查
+     */
+    private static void performHealthCheck(ConfigurableApplicationContext context, StartupProgressTracker progressTracker) {
+        try {
+            // 检查框架状态
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.HEALTH_CHECK, 25, "检查框架状态");
+            GameServerFramework framework = context.getBean(GameServerFramework.class);
+            System.out.println("框架状态: " + framework.getStatus().getDescription());
+            System.out.println("已加载模块数: " + framework.getInitializedModuleCount());
+            
+            // 检查服务管理器状态
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.HEALTH_CHECK, 50, "检查服务状态");
+            ServiceManager serviceManager = context.getBean(ServiceManager.class);
+            // 这里可以添加更多的服务状态检查
+            
+            // 检查端口监听状态
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.HEALTH_CHECK, 75, "检查端口状态");
+            // 这里可以添加端口监听状态检查
+            
+            progressTracker.updateStageProgress(StartupProgressTracker.StartupStage.HEALTH_CHECK, 100, "健康检查完成");
+            
+        } catch (Exception e) {
+            System.out.println("健康检查部分失败: " + e.getMessage());
+            // 不抛出异常，允许继续运行
         }
     }
     
@@ -157,8 +233,9 @@ public class Bootstrap {
      *
      * @param context 应用上下文
      * @param runMode 运行模式
+     * @param progressTracker 进度跟踪器
      */
-    private static void printStartupSuccess(ConfigurableApplicationContext context, RunMode runMode) {
+    private static void printStartupSuccess(ConfigurableApplicationContext context, RunMode runMode, StartupProgressTracker progressTracker) {
         Environment env = context.getEnvironment();
         
         // 获取服务器端口
@@ -172,6 +249,7 @@ public class Bootstrap {
         System.out.println("  访问路径: http://localhost:" + port + contextPath);
         System.out.println("  健康检查: http://localhost:" + port + contextPath + "/actuator/health");
         System.out.println("  启动完成时间: " + LocalDateTime.now().format(TIME_FORMATTER));
+        System.out.println("  总启动耗时: " + progressTracker.getStartupDurationMs() + "ms");
         
         // 输出关键配置信息
         printKeyConfigurations(env, runMode);

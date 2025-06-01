@@ -19,6 +19,11 @@
         <!-- 核心框架依赖 -->
         <dependency>
             <groupId>com.lx.gameserver</groupId>
+            <artifactId>launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
             <artifactId>common-core</artifactId>
             <version>${project.version}</version>
         </dependency>

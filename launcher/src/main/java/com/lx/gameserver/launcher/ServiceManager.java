@@ -19,7 +19,9 @@ package com.lx.gameserver.launcher;
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -137,6 +139,24 @@ public class ServiceManager implements ApplicationListener<ContextClosedEvent> {
     private volatile ServiceManagerStatus status = ServiceManagerStatus.INITIALIZING;
     
     /**
+     * 启动验证器
+     */
+    @Autowired
+    private StartupValidator startupValidator;
+    
+    /**
+     * 环境配置
+     */
+    @Autowired
+    private Environment environment;
+    
+    /**
+     * 多实例配置
+     */
+    @Autowired
+    private MultiInstanceConfig multiInstanceConfig;
+    
+    /**
      * 管理的服务列表
      */
     private final List<ServiceInfo> managedServices = new ArrayList<>();
@@ -162,17 +182,23 @@ public class ServiceManager implements ApplicationListener<ContextClosedEvent> {
         System.out.println("服务管理器初始化开始 - " + startupTime.format(TIME_FORMATTER));
         
         try {
-            // 初始化线程池
+            // 1. 执行启动前验证
+            performStartupValidation();
+            
+            // 2. 初始化线程池
             executorService = Executors.newCachedThreadPool(r -> {
                 Thread t = new Thread(r, "ServiceManager-Thread");
                 t.setDaemon(true);
                 return t;
             });
             
-            // 注册核心服务
+            // 3. 注册核心服务
             registerCoreServices();
             
-            // 启动所有服务
+            // 4. 检查多实例配置
+            checkMultiInstanceConfiguration();
+            
+            // 5. 启动所有服务
             startAllServices();
             
             status = ServiceManagerStatus.RUNNING;
@@ -182,6 +208,45 @@ public class ServiceManager implements ApplicationListener<ContextClosedEvent> {
             System.err.println("服务管理器初始化失败: " + e.getMessage());
             status = ServiceManagerStatus.STOPPED;
             throw new RuntimeException("服务管理器初始化失败", e);
+        }
+    }
+    
+    /**
+     * 执行启动前验证
+     */
+    private void performStartupValidation() {
+        System.out.println("执行服务启动前验证...");
+        
+        StartupValidator.ValidationResult result = startupValidator.validateStartupEnvironment(environment);
+        
+        if (result.hasErrors()) {
+            throw new RuntimeException("启动验证失败: " + String.join(", ", result.getErrors()));
+        }
+        
+        if (result.hasWarnings()) {
+            System.out.println("启动验证警告:");
+            result.getWarnings().forEach(warning -> System.out.println("  ⚠️ " + warning));
+        }
+        
+        System.out.println("启动验证通过");
+    }
+    
+    /**
+     * 检查多实例配置
+     */
+    private void checkMultiInstanceConfiguration() {
+        if (multiInstanceConfig.isEnabled()) {
+            System.out.println("多实例模式已启用");
+            
+            List<MultiInstanceConfig.InstanceInfo> instances = multiInstanceConfig.getAllInstances();
+            System.out.println("配置的实例总数: " + instances.size());
+            
+            for (MultiInstanceConfig.InstanceInfo instance : instances) {
+                System.out.println(String.format("  - %s: 端口=%d, 日志=%s", 
+                    instance.getInstanceId(), instance.getPort(), instance.getLogPath()));
+            }
+        } else {
+            System.out.println("单实例模式运行");
         }
     }
     
