@@ -100,6 +100,12 @@
             <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
 
+        <!-- JSR-250 注解支持 -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+
         <!-- 事件处理 -->
         <dependency>
             <groupId>com.lmax</groupId>

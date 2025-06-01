@@ -102,6 +102,18 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         
+        <!-- Servlet API 支持 -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+        
+        <!-- JSR-250 注解支持 (PostConstruct, PreDestroy等) -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+        
         <!-- 可选依赖网络模块 -->
         <dependency>
             <groupId>com.lx.gameserver</groupId>

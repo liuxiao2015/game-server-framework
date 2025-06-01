@@ -440,7 +440,7 @@ public abstract class Activity implements ActivityLifecycle {
      * @param context 活动上下文
      * @param error   错误信息
      */
-    protected void onError(ActivityContext context, Throwable error) {
+    public void onError(ActivityContext context, Throwable error) {
         log.error("活动执行出错: {} (ID: {})", activityName, activityId, error);
         lifecycleState.set(LifecycleState.ERROR);
     }
