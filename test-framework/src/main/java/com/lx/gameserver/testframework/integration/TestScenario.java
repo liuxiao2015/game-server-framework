@@ -283,4 +283,17 @@ public abstract class TestScenario {
             throw new AssertionError(message);
         }
     }
+    
+    /**
+     * 断言条件为真
+     * 
+     * @param condition 条件
+     * @param message 错误消息
+     * @throws Exception 断言异常
+     */
+    protected void assertTrue(boolean condition, String message) throws Exception {
+        if (!condition) {
+            throw new AssertionError(message);
+        }
+    }
 }
