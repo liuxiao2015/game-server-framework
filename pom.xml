@@ -58,6 +58,9 @@
         <module>framework-test</module>
         <module>test-framework</module>
         
+        <!-- 管理控制台 -->
+        <module>admin-console</module>
+        
         <!-- 服务模块 -->
         <!-- Temporarily disabled while fixing framework issues  
         <module>service/service-gateway</module>

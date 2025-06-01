@@ -1,0 +1,248 @@
+# 游戏服务器管理后台配置文件
+# 文件名: application-admin.yml
+# 用途: 管理后台应用配置模板
+# 实现内容: 完整的管理后台配置参数定义
+# 技术选型: Spring Boot配置、YAML格式
+# 依赖关系: 被AdminApplication使用的主配置文件
+
+# 服务器配置
+server:
+  port: 8090
+  servlet:
+    context-path: /admin
+  compression:
+    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Spring配置
+spring:
+  application:
+    name: game-server-admin-console
+  
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/game_admin?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # Redis配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 1
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  # 缓存配置
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=300s
+  
+  # 任务调度配置
+  quartz:
+    job-store-type: jdbc
+    scheduler-name: AdminScheduler
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceId: AUTO
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            tablePrefix: QRTZ_
+            isClustered: true
+  
+  # 安全配置
+  security:
+    user:
+      name: admin
+      password: admin123
+      roles: ADMIN
+
+# 管理后台特定配置
+admin:
+  console:
+    # 基础配置
+    title: 游戏服务器管理后台
+    version: 1.0.0
+    logo: /assets/logo.png
+    
+    # 安全配置
+    security:
+      jwt:
+        secret: ${JWT_SECRET:gameserver-admin-jwt-secret-key-2025-very-long-and-secure}
+        expiration: 7200  # 2小时
+        refresh-expiration: 604800  # 7天
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "*"
+        allowed-headers: "*"
+        allow-credentials: true
+      rate-limit:
+        enabled: true
+        requests-per-minute: 60
+        burst-capacity: 100
+      max-login-attempts: 5
+      account-lock-duration: 30  # 分钟
+    
+    # 监控配置
+    monitor:
+      metrics:
+        enabled: true
+        export-interval: 10s
+        jvm-enabled: true
+        system-enabled: true
+      alert:
+        enabled: true
+        channels:
+          - email
+          - dingtalk
+        rules:
+          - name: high-cpu-usage
+            condition: "cpu_usage > 80"
+            duration: "5m"
+          - name: high-memory-usage
+            condition: "memory_usage > 85"
+            duration: "5m"
+    
+    # 插件配置
+    plugins:
+      scan-package: "com.lx.gameserver.admin.plugins"
+      directory: "plugins"
+      auto-load: true
+      hot-reload: false
+      max-load-timeout: 30000  # 毫秒
+    
+    # 审计配置
+    audit:
+      enabled: true
+      retention-days: 90
+      async-logging: true
+      sensitive-operations:
+        - user.delete
+        - config.update
+        - data.export
+        - system.shutdown
+      excluded-paths:
+        - /admin/health
+        - /admin/metrics
+        - /admin/assets/**
+    
+    # 数据分析配置
+    analytics:
+      enabled: true
+      batch-size: 1000
+      flush-interval: 60s
+      retention-policy:
+        daily: 30d
+        weekly: 12w
+        monthly: 12m
+    
+    # 文件上传配置
+    upload:
+      max-file-size: 100MB
+      max-request-size: 500MB
+      allowed-types:
+        - image/jpeg
+        - image/png
+        - image/gif
+        - application/pdf
+        - text/plain
+      storage-path: ${UPLOAD_PATH:./uploads}
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver.admin: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/admin-console.log
+    max-size: 100MB
+    max-history: 30
+
+# 监控端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,beans,env
+      base-path: /admin/actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 国际化配置
+spring.messages:
+  basename: i18n/messages
+  encoding: UTF-8
+  cache-duration: 3600s
+
+# 异步配置
+spring.task:
+  execution:
+    pool:
+      core-size: 8
+      max-size: 16
+      queue-capacity: 1000
+      keep-alive: 60s
+    thread-name-prefix: admin-task-
+  scheduling:
+    pool:
+      size: 4
+    thread-name-prefix: admin-schedule-
+
+# API文档配置
+springdoc:
+  api-docs:
+    path: /admin/api-docs
+  swagger-ui:
+    path: /admin/swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  info:
+    title: 游戏服务器管理后台API
+    description: 提供完整的游戏服务器管理功能
+    version: 1.0.0
+    contact:
+      name: 开发团队
+      email: admin@gameserver.com
