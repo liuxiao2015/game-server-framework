@@ -1,0 +1,149 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.eclipse.downloadSources": true,
+    "java.maven.downloadSources": true,
+    "java.saveActions.organizeImports": true,
+    "java.format.settings.url": "./config-templates/ide/vscode/java-google-style.xml",
+    "java.format.settings.profile": "GoogleStyle",
+    "java.checkstyle.configuration": "./checkstyle.xml",
+    "java.checkstyle.version": "10.12.4",
+    "java.completion.favoriteStaticMembers": [
+        "org.junit.jupiter.api.Assertions.*",
+        "org.mockito.Mockito.*",
+        "org.mockito.ArgumentMatchers.*",
+        "org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*",
+        "org.springframework.test.web.servlet.result.MockMvcResultMatchers.*"
+    ],
+    "java.imports.gradle.wrapper.checksums": [
+        {
+            "sha256": "e996d452d2645e70c01c11143ca2d3742734a28da55b9d27bd1b238d6019b421",
+            "allowed": true
+        }
+    ],
+    "java.inlayHints.parameterNames.enabled": "all",
+    "java.sources.organizeImports.starThreshold": 99,
+    "java.sources.organizeImports.staticStarThreshold": 99,
+    
+    // Spring Boot配置
+    "spring-boot.ls.problem.application-properties.enabled": true,
+    "spring-boot.ls.problem.application-yaml.enabled": true,
+    
+    // Maven配置
+    "maven.executable.path": "mvn",
+    "maven.terminal.useJavaHome": true,
+    "maven.terminal.customEnv": [
+        {
+            "environmentVariable": "MAVEN_OPTS",
+            "value": "-Xmx2g -XX:+UseG1GC"
+        }
+    ],
+    
+    // 编辑器配置
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.rulers": [80, 120],
+    "editor.wordWrap": "off",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+    },
+    
+    // 文件配置
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "files.trimFinalNewlines": true,
+    "files.associations": {
+        "*.yml": "yaml",
+        "*.yaml": "yaml",
+        "Dockerfile*": "dockerfile",
+        "*.env*": "properties"
+    },
+    "files.exclude": {
+        "**/target": true,
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true,
+        "**/node_modules": true,
+        "**/.DS_Store": true
+    },
+    
+    // Git配置
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.defaultCloneDirectory": "~/workspace",
+    
+    // 搜索配置
+    "search.exclude": {
+        "**/target": true,
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/logs": true,
+        "**/*.log": true
+    },
+    
+    // 终端配置
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.env.linux": {
+        "JAVA_HOME": "/usr/lib/jvm/java-21-openjdk-amd64"
+    },
+    "terminal.integrated.env.osx": {
+        "JAVA_HOME": "/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home"
+    },
+    
+    // 任务配置
+    "tasks.version": "2.0.0",
+    "tasks.options": {
+        "env": {
+            "MAVEN_OPTS": "-Xmx2g -XX:+UseG1GC"
+        }
+    },
+    
+    // 调试配置
+    "debug.allowBreakpointsEverywhere": true,
+    "debug.inlineValues": "auto",
+    
+    // 扩展特定配置
+    "checkstyle.configurationFile": "./checkstyle.xml",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "gameserver",
+        "projectKey": "liuxiao2015_game-server-framework"
+    },
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+        "https://json.schemastore.org/github-action.json": ".github/actions/*/action.yml",
+        "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": "docker-compose*.yml"
+    },
+    
+    // 智能感知配置
+    "typescript.suggest.autoImports": true,
+    "javascript.suggest.autoImports": true,
+    "java.completion.importOrder": [
+        "java",
+        "javax",
+        "org",
+        "com",
+        ""
+    ],
+    
+    // 工作区推荐设置
+    "workbench.colorTheme": "Default Dark+",
+    "workbench.iconTheme": "vs-seti",
+    "workbench.startupEditor": "readme",
+    "workbench.tips.enabled": true,
+    "workbench.tree.indent": 20,
+    
+    // 性能优化
+    "extensions.autoUpdate": false,
+    "telemetry.telemetryLevel": "off",
+    "update.mode": "manual"
+}
