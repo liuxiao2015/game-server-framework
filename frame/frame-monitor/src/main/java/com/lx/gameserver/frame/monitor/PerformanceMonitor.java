@@ -46,7 +46,7 @@ import java.util.function.Supplier;
 public class PerformanceMonitor {
     
     @Autowired
-    private MeterRegistry meterRegistry;
+    MeterRegistry meterRegistry;
     
     /**
      * 计数器缓存

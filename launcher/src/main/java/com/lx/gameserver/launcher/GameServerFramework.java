@@ -60,10 +60,10 @@ public class GameServerFramework implements ApplicationListener<ContextRefreshed
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     @Autowired
-    private ApplicationContext applicationContext;
+    ApplicationContext applicationContext;
     
     @Autowired(required = false)
-    private ServiceManager serviceManager;
+    ServiceManager serviceManager;
     
     /** 框架状态 */
     private volatile FrameworkStatus status = FrameworkStatus.INITIALIZING;
@@ -481,5 +481,19 @@ public class GameServerFramework implements ApplicationListener<ContextRefreshed
         }
         
         return info;
+    }
+    
+    /**
+     * 获取已初始化的模块
+     */
+    public Map<String, FrameworkModule> getInitializedModules() {
+        return Collections.unmodifiableMap(initializedModules);
+    }
+    
+    /**
+     * 获取模块状态（别名方法，与getAllModuleStatus一致）
+     */
+    public Map<String, String> getModuleStatus() {
+        return getAllModuleStatus();
     }
 }
