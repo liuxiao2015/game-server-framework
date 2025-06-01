@@ -56,6 +56,7 @@
         
         <!-- 测试模块 -->
         <module>framework-test</module>
+        <module>test-framework</module>
         
         <!-- 服务模块 -->
         <!-- Temporarily disabled while fixing framework issues  
