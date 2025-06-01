@@ -190,7 +190,7 @@ public class DDoSProtection {
             
             // CC攻击检测 - 检查IP访问频率
             if (ipStats.getRequestsPerSecond() > autoBanThreshold) {
-                handleSuspiciousActivity(ip, "CC攻击", ipStats.getRequestsPerSecond());
+                handleSuspiciousActivity(ip, "CC攻击", (long) ipStats.getRequestsPerSecond());
                 return true;
             }
             
@@ -254,7 +254,7 @@ public class DDoSProtection {
             
             // SYN Flood检测 - 检查连接频率
             if (ipStats.getRequestsPerSecond() > autoBanThreshold / 2) {
-                handleSuspiciousActivity(ip, "SYN Flood", ipStats.getRequestsPerSecond());
+                handleSuspiciousActivity(ip, "SYN Flood", (long) ipStats.getRequestsPerSecond());
                 return true;
             }
             
@@ -296,7 +296,7 @@ public class DDoSProtection {
             
             // UDP Flood检测
             if (ipStats.getRequestsPerSecond() > autoBanThreshold * 2) {
-                handleSuspiciousActivity(ip, "UDP Flood", ipStats.getRequestsPerSecond());
+                handleSuspiciousActivity(ip, "UDP Flood", (long) ipStats.getRequestsPerSecond());
                 return true;
             }
             

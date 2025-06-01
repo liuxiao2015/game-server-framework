@@ -445,6 +445,39 @@ public class DeviceBinding {
     }
 
     /**
+     * 验证设备绑定
+     *
+     * @param userId 用户ID
+     * @param deviceId 设备ID
+     * @return 是否验证通过
+     */
+    public boolean verifyBinding(String userId, String deviceId) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(deviceId)) {
+            log.warn("验证设备绑定参数无效: userId={}, deviceId={}", userId, deviceId);
+            return false;
+        }
+        
+        try {
+            String cacheKey = USER_DEVICE_PREFIX + userId;
+            Set<Object> deviceIds = redisTemplate.opsForSet().members(cacheKey);
+            
+            if (deviceIds == null || deviceIds.isEmpty()) {
+                log.debug("用户没有绑定设备: userId={}", userId);
+                return false;
+            }
+            
+            boolean isVerified = deviceIds.contains(deviceId);
+            log.debug("设备绑定验证结果: userId={}, deviceId={}, verified={}", userId, deviceId, isVerified);
+            
+            return isVerified;
+            
+        } catch (Exception e) {
+            log.error("验证设备绑定失败: userId={}, deviceId={}", userId, deviceId, e);
+            return false;
+        }
+    }
+
+    /**
      * 获取IP段（前三段）
      *
      * @param ip IP地址

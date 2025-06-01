@@ -62,8 +62,8 @@
         <module>business/activity</module>
         <module>business/payment</module>
         <!-- <module>business/scene</module> Temporarily disabled due to compilation issues -->
-        <!-- Temporarily disabled while fixing security dependencies
         <module>business/gateway</module>
+        <!-- Temporarily disabled while fixing security dependencies
         <module>business/login</module>
         <module>business/chat</module>
         <module>business/logic</module>

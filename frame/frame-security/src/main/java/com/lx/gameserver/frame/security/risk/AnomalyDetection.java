@@ -346,6 +346,63 @@ public class AnomalyDetection {
     }
     
     /**
+     * 评估设备风险
+     *
+     * @param userId 用户ID
+     * @param deviceId 设备ID
+     * @param ip IP地址
+     * @param userAgent 用户代理
+     * @param location 地理位置
+     * @return 设备风险评分（0-100）
+     */
+    public float assessDeviceRisk(String userId, String deviceId, String ip, String userAgent, String location) {
+        if (userId == null || deviceId == null) {
+            return 0;
+        }
+        
+        try {
+            float riskScore = 0;
+            
+            // 检查设备历史记录
+            DeviceRecord deviceRecord = userDeviceHistory.get(userId + ":" + deviceId);
+            if (deviceRecord == null) {
+                // 新设备增加风险
+                riskScore += 20;
+                
+                // 记录新设备
+                deviceRecord = new DeviceRecord(userId, deviceId, ip, userAgent, location, Instant.now());
+                userDeviceHistory.put(userId + ":" + deviceId, deviceRecord);
+            } else {
+                // 检查IP变化
+                if (!Objects.equals(deviceRecord.getLastIp(), ip)) {
+                    riskScore += calculateIpChangeRisk(deviceRecord.getLastIp(), ip);
+                    deviceRecord.setLastIp(ip);
+                }
+                
+                // 检查User-Agent变化
+                if (!Objects.equals(deviceRecord.getUserAgent(), userAgent)) {
+                    riskScore += 15; // User-Agent变化风险
+                }
+                
+                // 检查地理位置变化
+                if (location != null && !Objects.equals(deviceRecord.getLocation(), location)) {
+                    riskScore += 25; // 地理位置变化风险
+                    deviceRecord.setLocation(location);
+                }
+                
+                deviceRecord.setLastAccess(Instant.now());
+            }
+            
+            log.debug("设备风险评估: userId={}, deviceId={}, score={}", userId, deviceId, riskScore);
+            return Math.min(riskScore, 100);
+            
+        } catch (Exception e) {
+            log.error("设备风险评估失败: userId={}, deviceId={}", userId, deviceId, e);
+            return 0;
+        }
+    }
+    
+    /**
      * 检测交易异常
      *
      * @param userId 用户ID
