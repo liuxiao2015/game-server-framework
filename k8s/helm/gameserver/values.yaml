@@ -1,0 +1,273 @@
+# =============================================================================
+# 游戏服务器框架 Helm Chart 默认配置
+# =============================================================================
+
+# 全局配置
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# 应用配置
+replicaCount: 3
+
+image:
+  registry: ghcr.io
+  repository: liuxiao2015/game-server-framework
+  tag: "latest"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# 服务配置
+service:
+  type: ClusterIP
+  ports:
+    http: 8080
+    management: 9090
+    tcp: 9000
+  annotations: {}
+
+# Ingress配置
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: gameserver.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: gameserver-tls
+      hosts:
+        - gameserver.local
+
+# 资源限制
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# 自动扩缩容
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# 健康检查
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: management
+  initialDelaySeconds: 120
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: management
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# 启动探针
+startupProbe:
+  httpGet:
+    path: /actuator/health
+    port: management
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
+# 节点选择和容忍
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod安全上下文
+podSecurityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  runAsNonRoot: true
+
+# 容器安全上下文
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# 服务账户
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# 配置
+config:
+  # Spring Boot配置
+  spring:
+    profiles:
+      active: prod,k8s
+    datasource:
+      url: jdbc:mysql://gameserver-mysql:3306/gameserver?useSSL=false&serverTimezone=UTC
+      username: gameserver
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    redis:
+      host: gameserver-redis-master
+      port: 6379
+      database: 0
+    jpa:
+      hibernate:
+        ddl-auto: validate
+      show-sql: false
+  
+  # 应用特定配置
+  gameserver:
+    server:
+      port: 9000
+    cache:
+      enabled: true
+    metrics:
+      enabled: true
+
+# 环境变量
+env:
+  - name: JAVA_OPTS
+    value: "-Xms1g -Xmx3g -XX:+UseG1GC -XX:+PrintGCDetails"
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod,k8s"
+
+# 密钥环境变量
+envFrom:
+  - secretRef:
+      name: gameserver-secrets
+  - configMapRef:
+      name: gameserver-config
+
+# 存储卷
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+
+# 数据库配置 (MySQL)
+mysql:
+  enabled: true
+  auth:
+    rootPassword: "gameserver-root-password"
+    database: "gameserver"
+    username: "gameserver"
+    password: "gameserver-password"
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+
+# 缓存配置 (Redis)
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "gameserver-redis-password"
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+# 负载均衡器配置 (Nginx)
+nginx:
+  enabled: false
+  serverBlock: |-
+    upstream gameserver {
+        server gameserver:8080;
+    }
+    
+    server {
+        listen 80;
+        server_name _;
+        
+        location / {
+            proxy_pass http://gameserver;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+# 监控配置
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s
+    path: /actuator/prometheus
+
+# 网络策略
+networkPolicy:
+  enabled: false
+  ingress: []
+  egress: []
+
+# Pod中断预算
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# 初始化容器
+initContainers: []
+
+# 额外容器
+extraContainers: []
+
+# 额外卷
+extraVolumes: []
+
+# 额外卷挂载
+extraVolumeMounts: []
+
+# Pod注解
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/actuator/prometheus"
+
+# Pod标签
+podLabels: {}
+
+# 部署策略
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# 测试配置
+tests:
+  enabled: true
+  image:
+    repository: curlimages/curl
+    tag: latest
+    pullPolicy: IfNotPresent

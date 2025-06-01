@@ -1,0 +1,81 @@
+{
+    "recommendations": [
+        // Java开发核心扩展
+        "vscjava.vscode-java-pack",
+        "redhat.java",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-java-test",
+        "vscjava.vscode-maven",
+        "vscjava.vscode-java-dependency",
+        
+        // Spring开发
+        "vmware.vscode-spring-boot",
+        "vscjava.vscode-spring-initializr",
+        "vscjava.vscode-spring-boot-dashboard",
+        
+        // 代码质量
+        "shengchen.vscode-checkstyle",
+        "sonarsource.sonarlint-vscode",
+        "spotless.spotless-gradle",
+        
+        // Git和版本控制
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "github.copilot",
+        "github.copilot-chat",
+        
+        // 文档编写
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        "bierner.markdown-mermaid",
+        "jebbs.plantuml",
+        
+        // 容器和部署
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        
+        // 配置文件支持
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-json",
+        "mikestead.dotenv",
+        
+        // 数据库
+        "cweijan.vscode-mysql-client2",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-mysql",
+        
+        // 实用工具
+        "formulahendry.auto-rename-tag",
+        "bradlc.vscode-tailwindcss",
+        "christian-kohler.path-intellisense",
+        "visualstudioexptteam.vscodeintellicode",
+        "ms-vscode.vscode-typescript-next",
+        
+        // 主题和图标
+        "vscode-icons-team.vscode-icons",
+        "pkief.material-icon-theme",
+        
+        // 性能和调试
+        "ms-vscode.vscode-java-pack",
+        "gabrielbb.vscode-lombok",
+        
+        // REST API测试
+        "humao.rest-client",
+        "rangav.vscode-thunder-client",
+        
+        // 代码格式化
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig",
+        
+        // 终端增强
+        "ms-vscode.powershell",
+        "formulahendry.terminal",
+        
+        // 其他有用扩展
+        "gruntfuggly.todo-tree",
+        "oderwat.indent-rainbow",
+        "mechatroner.rainbow-csv",
+        "alefragnani.bookmarks"
+    ]
+}

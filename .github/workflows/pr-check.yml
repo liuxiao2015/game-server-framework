@@ -1,0 +1,419 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches: [ main, develop, release/* ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+env:
+  MAVEN_OPTS: -Xmx2g -XX:+UseG1GC
+
+jobs:
+  # 代码质量检查
+  code-quality:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 设置Java环境
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 缓存SonarCloud依赖
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: 编码规范检查
+      run: |
+        echo "::group::Checkstyle检查"
+        mvn checkstyle:check -B
+        echo "::endgroup::"
+
+    - name: 代码风格检查
+      run: |
+        echo "::group::Spotless检查"
+        mvn spotless:check -B
+        echo "::endgroup::"
+
+    - name: Bug检查
+      run: |
+        echo "::group::SpotBugs检查"
+        mvn spotbugs:check -B
+        echo "::endgroup::"
+
+    - name: 依赖漏洞检查
+      run: |
+        echo "::group::OWASP依赖检查"
+        mvn org.owasp:dependency-check-maven:check -B
+        echo "::endgroup::"
+
+    - name: SonarCloud分析
+      if: ${{ env.SONAR_TOKEN != '' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        mvn sonar:sonar -B \
+          -Dsonar.projectKey=liuxiao2015_game-server-framework \
+          -Dsonar.organization=liuxiao2015 \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.pullrequest.key=${{ github.event.number }} \
+          -Dsonar.pullrequest.branch=${{ github.head_ref }} \
+          -Dsonar.pullrequest.base=${{ github.base_ref }}
+
+    - name: 上传代码质量报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-quality-reports
+        path: |
+          target/checkstyle-result.xml
+          target/spotbugsXml.xml
+          target/dependency-check-report.html
+        retention-days: 30
+
+  # 构建和测试
+  build-and-test:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        java-version: [17, 21]
+        os: [ubuntu-latest, windows-latest]
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Java环境
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 编译项目
+      run: mvn clean compile -B
+
+    - name: 运行单元测试
+      run: |
+        mvn test -B \
+          -Dmaven.test.failure.ignore=false \
+          -Djacoco.skip=false
+
+    - name: 运行集成测试
+      run: |
+        mvn verify -B \
+          -DskipUnitTests=true \
+          -Dfailsafe.rerunFailingTestsCount=2
+
+    - name: 生成测试报告
+      if: always()
+      run: |
+        mvn surefire-report:report-only -B
+        mvn failsafe-report:report-only -B
+
+    - name: 上传测试报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-reports-java${{ matrix.java-version }}-${{ matrix.os }}
+        path: |
+          target/surefire-reports/
+          target/failsafe-reports/
+          target/site/
+        retention-days: 30
+
+    - name: 上传代码覆盖率
+      if: matrix.java-version == '21' && matrix.os == 'ubuntu-latest'
+      uses: codecov/codecov-action@v3
+      with:
+        file: target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # 安全扫描
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Java环境
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 构建项目
+      run: mvn clean compile -B -DskipTests
+
+    - name: CodeQL分析初始化
+      uses: github/codeql-action/init@v3
+      with:
+        languages: java
+
+    - name: CodeQL自动构建
+      uses: github/codeql-action/autobuild@v3
+
+    - name: 执行CodeQL分析
+      uses: github/codeql-action/analyze@v3
+
+    - name: Snyk漏洞扫描
+      uses: snyk/actions/maven@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+    - name: 上传Snyk报告
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: snyk.sarif
+
+  # Docker构建测试
+  docker-build:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 构建Docker镜像
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: gameserver:pr-${{ github.event.number }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: 镜像安全扫描
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: gameserver:pr-${{ github.event.number }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 上传镜像扫描结果
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 性能测试
+  performance-test:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'performance')
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Java环境
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 启动测试服务
+      run: |
+        mvn clean package -B -DskipTests
+        java -jar launcher/target/*.jar &
+        sleep 30
+
+    - name: 运行JMeter性能测试
+      uses: rbhadti94/apache-jmeter-action@v0.5.0
+      with:
+        testFilePath: src/test/jmeter/performance-test.jmx
+        outputReportsFolder: target/jmeter-reports
+
+    - name: 上传性能测试报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-reports
+        path: target/jmeter-reports/
+        retention-days: 30
+
+  # 文档检查
+  docs-check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 检查文档链接
+      uses: lycheeverse/lychee-action@v1.8.0
+      with:
+        args: --verbose --no-progress '**/*.md'
+
+    - name: 检查拼写错误
+      uses: streetsidesoftware/cspell-action@v5
+      with:
+        files: |
+          **/*.md
+          **/*.java
+        config: .cspell.json
+
+  # PR评论汇总
+  pr-comment:
+    runs-on: ubuntu-latest
+    needs: [code-quality, build-and-test, security-scan, docker-build]
+    if: always() && github.event.pull_request.draft == false
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 下载测试报告
+      uses: actions/download-artifact@v4
+      with:
+        path: ./reports
+
+    - name: 生成PR评论
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // 检查任务状态
+          const jobs = [
+            { name: '代码质量检查', status: '${{ needs.code-quality.result }}' },
+            { name: '构建和测试', status: '${{ needs.build-and-test.result }}' },
+            { name: '安全扫描', status: '${{ needs.security-scan.result }}' },
+            { name: 'Docker构建', status: '${{ needs.docker-build.result }}' }
+          ];
+          
+          const getStatusEmoji = (status) => {
+            switch (status) {
+              case 'success': return '✅';
+              case 'failure': return '❌';
+              case 'cancelled': return '⏹️';
+              case 'skipped': return '⏭️';
+              default: return '⏳';
+            }
+          };
+          
+          let comment = `## 🚀 PR检查结果\n\n`;
+          comment += `| 检查项 | 状态 | 结果 |\n`;
+          comment += `|--------|------|------|\n`;
+          
+          jobs.forEach(job => {
+            comment += `| ${job.name} | ${getStatusEmoji(job.status)} | ${job.status} |\n`;
+          });
+          
+          comment += `\n### 📊 详细信息\n\n`;
+          comment += `- **提交**: ${context.sha.substring(0, 7)}\n`;
+          comment += `- **分支**: ${context.payload.pull_request.head.ref}\n`;
+          comment += `- **检查时间**: ${new Date().toISOString()}\n`;
+          
+          // 添加失败的提示
+          const failedJobs = jobs.filter(job => job.status === 'failure');
+          if (failedJobs.length > 0) {
+            comment += `\n### ⚠️ 失败的检查\n\n`;
+            failedJobs.forEach(job => {
+              comment += `- ${job.name}: 请查看详细日志进行修复\n`;
+            });
+          }
+          
+          comment += `\n---\n`;
+          comment += `> 此评论由 GitHub Actions 自动生成`;
+          
+          // 查找现有评论
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && comment.body.includes('PR检查结果')
+          );
+          
+          if (botComment) {
+            // 更新现有评论
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: comment
+            });
+          } else {
+            // 创建新评论
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: comment
+            });
+          }
+
+  # 自动合并检查
+  auto-merge-check:
+    runs-on: ubuntu-latest
+    needs: [code-quality, build-and-test, security-scan, docker-build]
+    if: |
+      always() && 
+      github.event.pull_request.draft == false &&
+      contains(github.event.pull_request.labels.*.name, 'auto-merge') &&
+      needs.code-quality.result == 'success' &&
+      needs.build-and-test.result == 'success' &&
+      needs.security-scan.result == 'success' &&
+      needs.docker-build.result == 'success'
+    
+    steps:
+    - name: 自动合并准备
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: reviews } = await github.rest.pulls.listReviews({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.payload.pull_request.number,
+          });
+          
+          const approvedReviews = reviews.filter(review => 
+            review.state === 'APPROVED' && review.user.type !== 'Bot'
+          );
+          
+          if (approvedReviews.length >= 1) {
+            console.log('PR已获得批准，所有检查通过，可以自动合并');
+            
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              commit_title: `自动合并: ${context.payload.pull_request.title}`,
+              commit_message: `由GitHub Actions自动合并\n\nPR #${context.payload.pull_request.number}`,
+              merge_method: 'squash'
+            });
+            
+            console.log('PR已自动合并');
+          } else {
+            console.log('PR需要至少1个批准才能自动合并');
+          }

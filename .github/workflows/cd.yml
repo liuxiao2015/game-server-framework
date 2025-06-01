@@ -1,0 +1,362 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main, release/* ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      force_deploy:
+        description: '强制部署'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 构建和测试
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 设置Java环境
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 获取版本号
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)-${GITHUB_SHA::8}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "VERSION: $VERSION"
+
+    - name: Maven构建
+      run: |
+        mvn clean compile test package -B \
+          -Dmaven.test.failure.ignore=false \
+          -Dcheckstyle.skip=false \
+          -Dspotbugs.skip=false
+
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          target/*.jar
+          **/target/*.jar
+        retention-days: 30
+
+    - name: 设置Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 登录Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 提取Docker元数据
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=${{ steps.version.outputs.version }}
+
+    - name: 构建并推送Docker镜像
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VERSION=${{ steps.version.outputs.version }}
+          BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          VCS_REF=${{ github.sha }}
+
+  # 安全扫描
+  security-scan:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.force_deploy == 'true'
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 运行Trivy漏洞扫描
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ needs.build.outputs.image }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 上传Trivy扫描结果
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 部署到staging环境
+  deploy-staging:
+    needs: [build, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: staging
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: 配置Kubernetes集群
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl config current-context
+
+    - name: 部署到Staging
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # 更新镜像标签
+        sed -i "s|image:.*|image: ${{ needs.build.outputs.image }}|g" k8s/base/deployment.yaml
+        
+        # 应用Kubernetes配置
+        kubectl apply -f k8s/base/ -n staging
+        
+        # 等待部署完成
+        kubectl rollout status deployment/gameserver-app -n staging --timeout=600s
+
+    - name: 验证部署
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # 检查Pod状态
+        kubectl get pods -n staging -l app=gameserver
+        
+        # 健康检查
+        kubectl wait --for=condition=Ready pod -l app=gameserver -n staging --timeout=300s
+
+    - name: 发送部署通知
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: |
+          Staging部署 ${{ job.status }}
+          版本: ${{ needs.build.outputs.version }}
+          分支: ${{ github.ref_name }}
+          提交: ${{ github.sha }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 部署到生产环境
+  deploy-production:
+    needs: [build, security-scan, deploy-staging]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: 配置Kubernetes集群
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl config current-context
+
+    - name: 生产环境预检查
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # 检查集群状态
+        kubectl cluster-info
+        kubectl get nodes
+        
+        # 检查现有部署
+        kubectl get deployment gameserver-app -n production || echo "首次部署"
+
+    - name: 部署到生产环境
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # 更新镜像标签
+        sed -i "s|image:.*|image: ${{ needs.build.outputs.image }}|g" k8s/base/deployment.yaml
+        
+        # 应用Kubernetes配置
+        kubectl apply -f k8s/base/ -n production
+        
+        # 滚动更新
+        kubectl rollout status deployment/gameserver-app -n production --timeout=900s
+
+    - name: 生产环境验证
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # 检查Pod状态
+        kubectl get pods -n production -l app=gameserver
+        
+        # 健康检查
+        kubectl wait --for=condition=Ready pod -l app=gameserver -n production --timeout=600s
+        
+        # 服务连通性测试
+        kubectl port-forward service/gameserver-service 8080:8080 -n production &
+        sleep 10
+        curl -f http://localhost:8080/actuator/health || exit 1
+
+    - name: 创建GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ needs.build.outputs.version }}
+        body: |
+          ## 🚀 Release ${{ needs.build.outputs.version }}
+          
+          ### 📦 Docker镜像
+          ```
+          ${{ needs.build.outputs.image }}
+          ```
+          
+          ### 📋 变更内容
+          - 自动生成的发布版本
+          
+          ### 🔧 部署信息
+          - 构建时间: ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          - Git提交: ${{ github.sha }}
+          - 镜像摘要: ${{ needs.build.outputs.digest }}
+        draft: false
+        prerelease: false
+
+    - name: 发送生产部署通知
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#production'
+        text: |
+          🚀 生产环境部署 ${{ job.status }}
+          版本: ${{ needs.build.outputs.version }}
+          标签: ${{ github.ref_name }}
+          镜像: ${{ needs.build.outputs.image }}
+          
+          ${{ job.status == 'success' && '✅ 部署成功！' || '❌ 部署失败，请检查日志！' }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 回滚任务
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    needs: [deploy-staging, deploy-production]
+    environment: rollback
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: 回滚Staging
+      if: needs.deploy-staging.result == 'failure'
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl rollout undo deployment/gameserver-app -n staging
+        kubectl rollout status deployment/gameserver-app -n staging
+
+    - name: 回滚生产环境
+      if: needs.deploy-production.result == 'failure'
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+        kubectl rollout undo deployment/gameserver-app -n production
+        kubectl rollout status deployment/gameserver-app -n production
+
+    - name: 发送回滚通知
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            "text": "🔄 自动回滚执行",
+            "attachments": [
+              {
+                "color": "warning",
+                "fields": [
+                  {
+                    "title": "回滚原因",
+                    "value": "部署失败自动触发回滚",
+                    "short": false
+                  },
+                  {
+                    "title": "版本",
+                    "value": "${{ needs.build.outputs.version }}",
+                    "short": true
+                  },
+                  {
+                    "title": "分支",
+                    "value": "${{ github.ref_name }}",
+                    "short": true
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
