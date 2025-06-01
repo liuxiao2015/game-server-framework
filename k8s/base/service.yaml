@@ -1,0 +1,135 @@
+# GameServer Application Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver-service
+  labels:
+    app: gameserver
+    component: application
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  - name: admin
+    port: 8090
+    targetPort: admin
+    protocol: TCP
+  selector:
+    app: gameserver
+    component: application
+
+---
+# GameServer TCP Game Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver-tcp-service
+  labels:
+    app: gameserver
+    component: tcp-game
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: tcp-game
+    port: 9090
+    targetPort: tcp-game
+    protocol: TCP
+  - name: websocket
+    port: 9091
+    targetPort: websocket
+    protocol: TCP
+  selector:
+    app: gameserver
+    component: application
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# GameServer Headless Service for StatefulSet (if needed)
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver-headless
+  labels:
+    app: gameserver
+    component: headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  - name: admin
+    port: 8090
+    targetPort: admin
+    protocol: TCP
+  selector:
+    app: gameserver
+    component: application
+
+---
+# GameServer External Service (for external access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver-external
+  labels:
+    app: gameserver
+    component: external
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:region:account:certificate/cert-id"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: gameserver
+    component: application
+
+---
+# Service Monitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gameserver-metrics
+  labels:
+    app: gameserver
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: gameserver
+      component: application
+  endpoints:
+  - port: admin
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+    honorLabels: true
