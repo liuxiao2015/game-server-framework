@@ -35,57 +35,20 @@
     
     <!-- 子模块列表 -->
     <modules>
-        <!-- 启动器模块 -->
-        <module>launcher</module>
+        <!-- 核心框架层 -->
+        <module>game-core</module>
         
-        <!-- 公共模块 -->
-        <module>common</module>
+        <!-- 游戏业务服务 -->
+        <module>game-services</module>
         
-        <!-- 框架模块 -->
-        <module>frame/frame-network</module>
-        <module>frame/frame-db</module>
-        <module>frame/frame-cache</module>
-        <module>frame/frame-event</module>
-        <module>frame/frame-actor</module>
-        <module>frame/frame-concurrent</module>
-        <module>frame/frame-rpc</module>
-        <module>frame/frame-ecs</module>
-        <module>frame/frame-config</module>
-        <module>frame/frame-monitor</module>
-        <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
+        <!-- 启动器 -->
+        <module>game-launcher</module>
         
-        <!-- 测试模块 -->
-        <module>framework-test</module>
-        <module>test-framework</module>
+        <!-- 管理后台 -->
+        <module>game-admin</module>
         
-        <!-- 管理控制台 -->
-        <module>admin-console</module>
-        
-        <!-- 服务模块 -->
-        <!-- Temporarily disabled while fixing framework issues  
-        <module>service/service-gateway</module>
-        <module>service/service-login</module>
-        <module>service/service-chat</module>
-        <module>service/service-logic</module>
-        <module>service/service-scene</module>
-        <module>service/service-rank</module>
-        <module>service/service-activity</module>
-        <module>service/service-payment</module>
-        -->
-        
-        <!-- 业务模块 -->
-        <module>business/ranking</module>
-        <!-- Temporarily disabled due to compilation issues
-        <module>business/activity</module>
-        <module>business/payment</module>
-        <module>business/scene</module>
-        -->
-        <!-- Temporarily disabled while fixing security dependencies
-        <module>business/gateway</module>
-        <module>business/login</module>
-        <module>business/chat</module>
-        <module>business/logic</module>
-        -->
+        <!-- 工具集 -->
+        <module>game-tools</module>
     </modules>
     
     <!-- 属性配置 -->

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>com.lx.gameserver</groupId>
+        <artifactId>game-server-framework</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    
+    <artifactId>game-services</artifactId>
+    <packaging>pom</packaging>
+    <name>Game Services</name>
+    <description>Business services for game server</description>
+    
+    <modules>
+        <module>service-gateway</module>
+        <module>service-auth</module>
+        <module>service-game</module>
+        <module>service-social</module>
+        <module>service-platform</module>
+    </modules>
+</project>

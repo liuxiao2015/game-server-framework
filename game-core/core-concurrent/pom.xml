@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  文件名: frame/frame-actor/pom.xml
+  用途: 游戏服务器框架的Actor模型实现
+  内容: 
+    - 轻量级Actor模型实现
+    - 消息驱动的对象模型
+    - 并行处理框架
+    - 游戏对象模型
+  技术选型: 
+    - Actor并发模型
+    - 消息传递机制
+    - 无共享状态设计
+  依赖关系: 
+    - 依赖common-core和frame-event
+    - 被游戏逻辑服务模块依赖
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.lx.gameserver</groupId>
+        <artifactId>game-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>core-concurrent</artifactId>
+    <name>Game Server Framework - Core Concurrent</name>
+    <description>游戏服务器框架核心并发模块，包含Actor模型、事件系统、ECS框架</description>
+
+    <dependencies>
+        <!-- 依赖核心模块 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>common-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- 依赖事件模块 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-event</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- 依赖并发模块 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-concurrent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- 工具库 -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        
+        <!-- 日志 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- 测试框架 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

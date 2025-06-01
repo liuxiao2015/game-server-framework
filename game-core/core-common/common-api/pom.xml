@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  文件名: common/common-api/pom.xml
+  用途: 游戏服务器框架的API定义模块
+  内容: 
+    - 服务间接口定义
+    - 公共接口和数据传输对象(DTO)
+    - RPC接口规范
+  技术选型: 
+    - Java接口定义
+    - DTO对象
+    - 接口规范与文档
+  依赖关系: 
+    - 依赖common-core
+    - 被所有服务模块依赖
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.lx.gameserver</groupId>
+        <artifactId>core-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>common-api</artifactId>
+    <name>Game Server Framework - Common API</name>
+    <description>游戏服务器框架API定义模块，包含服务间接口定义和数据传输对象</description>
+
+    <dependencies>
+        <!-- 依赖公共核心模块 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>common-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- 依赖协议模块 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>common-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!-- Dubbo API定义支持 -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- 工具库 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        
+        <!-- JSON处理 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- 测试框架 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
