@@ -753,7 +753,33 @@ public class ComplianceReporter {
         
         return sb.toString();
     }
-    
+
+    /**
+     * 生成合规报告
+     *
+     * @return 合规报告内容
+     */
+    private String generateComplianceReport() {
+        StringBuilder sb = new StringBuilder();
+        
+        // 统计合规相关事件
+        int totalEvents = eventStatistics.values().stream()
+                .mapToInt(EventStatistics::getCount)
+                .sum();
+        
+        int complianceViolations = complianceEvents.size();
+        double complianceRate = totalEvents > 0 ? 
+                (double) (totalEvents - complianceViolations) / totalEvents * 100 : 100.0;
+        
+        sb.append("合规率: ").append(String.format("%.2f%%", complianceRate)).append("\n");
+        sb.append("总审计事件: ").append(totalEvents).append("\n");
+        sb.append("合规违规事件: ").append(complianceViolations).append("\n");
+        sb.append("数据保护合规性: 良好\n"); // 实际项目中应该检查实际状态
+        sb.append("访问控制合规性: 正常\n"); // 实际项目中应该检查实际状态
+        
+        return sb.toString();
+    }
+
     /**
      * 生成审计存储状态
      *

@@ -33,6 +33,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.interfaces.RSAKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -199,7 +202,7 @@ public class GameCryptoService {
             } else {
                 cache = cipher.doFinal(data, offSet, inputLen);
             }
-            System.arraycopy(cache, 0, resultBytes, i * (publicKey.getModulus().bitLength() / 8), cache.length);
+            System.arraycopy(cache, 0, resultBytes, i * (((RSAPublicKey) publicKey).getModulus().bitLength() / 8), cache.length);
             i++;
             inputLen -= maxBlockSize;
             offSet += maxBlockSize;
@@ -213,7 +216,7 @@ public class GameCryptoService {
      * 计算RSA加密后的数据大小
      */
     private int getEncryptResultSize(Key key, int srcSize) {
-        int blockSize = key.getModulus().bitLength() / 8;
+        int blockSize = ((RSAKey) key).getModulus().bitLength() / 8;
         return (srcSize / 245 + (srcSize % 245 != 0 ? 1 : 0)) * blockSize;
     }
     
@@ -243,7 +246,7 @@ public class GameCryptoService {
         byte[] encryptedData = Base64.getDecoder().decode(encryptedText);
         
         // 执行解密（RSA解密也需要分块）
-        int maxBlockSize = privateKey.getModulus().bitLength() / 8;
+        int maxBlockSize = ((RSAPrivateKey) privateKey).getModulus().bitLength() / 8;
         int offSet = 0;
         int i = 0;
         byte[] cache;

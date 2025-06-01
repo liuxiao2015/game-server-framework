@@ -243,6 +243,15 @@ public class GameUserDetails implements UserDetails, CredentialsContainer {
     }
 
     /**
+     * 获取用户ID
+     *
+     * @return 用户ID
+     */
+    public String getUserId() {
+        return this.id != null ? this.id.toString() : null;
+    }
+
+    /**
      * 创建游戏用户明细构建器
      *
      * @return 构建器

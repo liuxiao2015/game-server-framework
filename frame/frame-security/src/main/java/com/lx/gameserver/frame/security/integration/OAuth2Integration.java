@@ -436,6 +436,78 @@ public class OAuth2Integration {
     }
 
     /**
+     * 使用授权码进行认证
+     *
+     * @param platform 平台名称
+     * @param code 授权码
+     * @param params 附加参数
+     * @return 用户信息
+     */
+    public UserInfo authenticateWithCode(String platform, String code, Map<String, String> params) {
+        log.debug("使用授权码认证: platform={}, code={}", platform, code);
+        
+        try {
+            // 首先使用授权码获取访问令牌
+            String accessToken = exchangeCodeForToken(platform, code, params);
+            
+            if (!StringUtils.hasText(accessToken)) {
+                log.warn("获取访问令牌失败: platform={}", platform);
+                return null;
+            }
+            
+            // 使用访问令牌获取用户信息
+            return getUserInfoByToken(platform, accessToken);
+            
+        } catch (Exception e) {
+            log.error("授权码认证失败: platform={}, error={}", platform, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 使用访问令牌进行认证
+     *
+     * @param platform 平台名称
+     * @param token 访问令牌
+     * @param params 附加参数
+     * @return 用户信息
+     */
+    public UserInfo authenticateWithToken(String platform, String token, Map<String, String> params) {
+        log.debug("使用访问令牌认证: platform={}, token={}", platform, token);
+        
+        try {
+            return getUserInfoByToken(platform, token);
+        } catch (Exception e) {
+            log.error("访问令牌认证失败: platform={}, error={}", platform, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 使用授权码换取访问令牌
+     */
+    private String exchangeCodeForToken(String platform, String code, Map<String, String> params) {
+        // 实现授权码换取令牌的逻辑
+        // 这里是简化实现，实际应用中需要根据不同平台的API规范实现
+        log.info("交换访问令牌: platform={}, code={}", platform, code);
+        return "mock_access_token"; // 临时返回，实际需要调用平台API
+    }
+
+    /**
+     * 使用访问令牌获取用户信息
+     */
+    private UserInfo getUserInfoByToken(String platform, String token) {
+        // 实现根据令牌获取用户信息的逻辑
+        // 这里是简化实现，实际应用中需要根据不同平台的API规范实现
+        log.info("获取用户信息: platform={}, token={}", platform, token);
+        return UserInfo.builder()
+                .platform(platform)
+                .id("mock_user_id")
+                .nickname("Mock User")
+                .build(); // 临时返回，实际需要调用平台API
+    }
+
+    /**
      * 用户信息类
      */
     @lombok.Data

@@ -207,11 +207,12 @@ public class GameAuthenticationManager implements AuthenticationManager {
         String username = authentication.getName();
         String ip = extractIpAddress(authentication);
         String deviceId = extractDeviceId(authentication);
+        String userAgent = extractUserAgent(authentication);
         
         // 异常行为检测
         if (anomalyDetection != null) {
             try {
-                if (anomalyDetection.detectLoginAnomaly(username, ip, deviceId)) {
+                if (anomalyDetection.detectLoginAnomaly(username, ip, deviceId, userAgent) > 50) {
                     log.warn("检测到异常登录行为: {} IP: {} 设备: {}", username, ip, deviceId);
                     throw new AuthenticationServiceException("检测到异常登录行为");
                 }
@@ -358,6 +359,19 @@ public class GameAuthenticationManager implements AuthenticationManager {
     private String extractDeviceId(Authentication authentication) {
         if (authentication.getDetails() instanceof Map) {
             return (String) ((Map<?, ?>) authentication.getDetails()).get("deviceId");
+        }
+        return null;
+    }
+    
+    /**
+     * 从认证信息中提取User-Agent
+     *
+     * @param authentication 认证信息
+     * @return User-Agent，如果无法提取则返回null
+     */
+    private String extractUserAgent(Authentication authentication) {
+        if (authentication.getDetails() instanceof Map) {
+            return (String) ((Map<?, ?>) authentication.getDetails()).get("userAgent");
         }
         return null;
     }

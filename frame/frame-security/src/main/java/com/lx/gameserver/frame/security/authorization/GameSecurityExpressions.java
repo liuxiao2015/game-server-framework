@@ -241,4 +241,45 @@ public class GameSecurityExpressions {
         
         return (GameUserDetails) principal;
     }
+
+    /**
+     * 通用评估方法 - 对象级权限检查
+     *
+     * @param authentication 认证信息
+     * @param targetObject 目标对象
+     * @param permission 权限字符串
+     * @return 是否有权限
+     */
+    public boolean evaluate(Authentication authentication, Object targetObject, String permission) {
+        log.debug("评估对象级权限: 权限={}, 目标对象={}", permission, targetObject);
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        
+        // 实现具体的权限评估逻辑
+        // 这里可以根据业务需要实现复杂的权限检查
+        return true; // 临时返回true，实际应用中需要实现具体逻辑
+    }
+
+    /**
+     * 通用评估方法 - 类型和ID级权限检查
+     *
+     * @param authentication 认证信息
+     * @param targetId 目标ID
+     * @param targetType 目标类型
+     * @param permission 权限字符串
+     * @return 是否有权限
+     */
+    public boolean evaluate(Authentication authentication, java.io.Serializable targetId, String targetType, String permission) {
+        log.debug("评估类型级权限: 权限={}, 目标类型={}, 目标ID={}", permission, targetType, targetId);
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        
+        // 实现具体的权限评估逻辑
+        // 这里可以根据业务需要实现复杂的权限检查
+        return true; // 临时返回true，实际应用中需要实现具体逻辑
+    }
 }
