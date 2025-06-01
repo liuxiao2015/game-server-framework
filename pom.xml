@@ -52,14 +52,10 @@
         <module>frame/frame-ecs</module>
         <module>frame/frame-config</module>
         <module>frame/frame-monitor</module>
-        <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
+        <!-- <module>frame/frame-security</module> Temporarily disabled due to compilation issues -->
 
-        <!-- 测试模块 -->
-        <module>framework-test</module>
-        <module>test-framework</module>
-
-        <!-- 管理控制台 -->
-        <module>admin-console</module>
+        <!-- 测试模块和工具 -->
+        <module>server_tool</module>
 
         <!-- 服务模块 -->
         <!-- Temporarily disabled while fixing framework issues
@@ -75,12 +71,9 @@
 
         <!-- 业务模块 -->
         <module>business/ranking</module>
-        <module>server_tool</module>
-        <!-- Temporarily disabled due to compilation issues
         <module>business/activity</module>
         <module>business/payment</module>
-        <module>business/scene</module>
-        -->
+        <!-- <module>business/scene</module> Temporarily disabled due to compilation issues -->
         <!-- Temporarily disabled while fixing security dependencies
         <module>business/gateway</module>
         <module>business/login</module>
