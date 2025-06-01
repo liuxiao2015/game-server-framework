@@ -46,10 +46,10 @@ import java.util.function.Consumer;
 public class ConfigManager {
     
     @Autowired
-    private Environment environment;
+    Environment environment;
     
     @Autowired
-    private ApplicationContext applicationContext;
+    ApplicationContext applicationContext;
     
     /**
      * 配置缓存
@@ -103,6 +103,38 @@ public class ConfigManager {
     @SuppressWarnings("unchecked")
     public <T> T getConfig(String key, T defaultValue) {
         return getConfig(key, (Class<T>) defaultValue.getClass(), defaultValue);
+    }
+    
+    /**
+     * 获取配置值（仅指定类型）
+     *
+     * @param key 配置键
+     * @param clazz 值类型Class
+     * @param <T> 值类型
+     * @return 配置值
+     */
+    public <T> T getConfig(String key, Class<T> clazz) {
+        try {
+            // 先尝试从缓存获取
+            Object cachedValue = configCache.get(key);
+            if (cachedValue != null && clazz.isInstance(cachedValue)) {
+                return clazz.cast(cachedValue);
+            }
+            
+            // 从环境获取配置
+            T value = environment.getProperty(key, clazz);
+            
+            // 缓存配置值
+            if (value != null) {
+                configCache.put(key, value);
+            }
+            
+            log.debug("获取配置: {} = {}", key, value);
+            return value;
+        } catch (Exception e) {
+            log.warn("获取配置失败: {}", key, e);
+            return null;
+        }
     }
     
     /**
@@ -163,6 +195,16 @@ public class ConfigManager {
     public void addConfigListener(String key, Consumer<Object> listener) {
         listeners.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(listener);
         log.debug("注册配置监听器: {}", key);
+    }
+    
+    /**
+     * 注册配置变更监听器（别名方法）
+     *
+     * @param key 配置键
+     * @param listener 监听器
+     */
+    public void addConfigChangeListener(String key, Consumer<Object> listener) {
+        addConfigListener(key, listener);
     }
     
     /**

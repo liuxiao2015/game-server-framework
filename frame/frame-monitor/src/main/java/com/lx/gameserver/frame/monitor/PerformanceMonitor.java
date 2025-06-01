@@ -46,7 +46,7 @@ import java.util.function.Supplier;
 public class PerformanceMonitor {
     
     @Autowired
-    private MeterRegistry meterRegistry;
+    MeterRegistry meterRegistry;
     
     /**
      * 计数器缓存
@@ -224,6 +224,86 @@ public class PerformanceMonitor {
         report.append("计时器: ").append(timerCache.size()).append("\n");
         report.append("量表: ").append(gaugeCache.size()).append("\n");
         
+        // 添加系统性能信息
+        report.append("\n=== 系统性能 ===\n");
+        Runtime runtime = Runtime.getRuntime();
+        report.append("内存使用: ").append(getMemoryUsage()).append("\n");
+        report.append("可用处理器: ").append(runtime.availableProcessors()).append("\n");
+        
         return report.toString();
+    }
+    
+    /**
+     * 获取内存使用情况
+     *
+     * @return 内存使用描述
+     */
+    public String getMemoryUsage() {
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory();
+        long totalMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
+        long usedMemory = totalMemory - freeMemory;
+        
+        return String.format("已用: %dMB / 总计: %dMB / 最大: %dMB (使用率: %.1f%%)",
+                usedMemory / 1024 / 1024,
+                totalMemory / 1024 / 1024,
+                maxMemory / 1024 / 1024,
+                (double) usedMemory / maxMemory * 100);
+    }
+    
+    /**
+     * 获取CPU使用率估算
+     *
+     * @return CPU使用率百分比
+     */
+    public double getCpuUsageEstimate() {
+        // 简单的CPU使用率估算
+        // 在实际应用中，可以使用更复杂的方法来获取准确的CPU使用率
+        long startTime = System.nanoTime();
+        
+        // 执行一些计算来测量CPU响应
+        double result = 0;
+        for (int i = 0; i < 10000; i++) {
+            result += Math.sqrt(i);
+        }
+        
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        
+        // 根据计算时间估算CPU负载（这是一个简化的方法）
+        double normalizedTime = duration / 1_000_000.0; // 转换为毫秒
+        return Math.min(normalizedTime / 10.0 * 100, 100.0); // 简化的CPU使用率计算
+    }
+    
+    /**
+     * 记录性能警告
+     *
+     * @param metric 指标名称
+     * @param value 当前值
+     * @param threshold 阈值
+     */
+    public void recordPerformanceWarning(String metric, double value, double threshold) {
+        if (value > threshold) {
+            incrementCounter("performance.warning", "metric", metric);
+            log.warn("性能警告: {} 当前值 {} 超过阈值 {}", metric, value, threshold);
+        }
+    }
+    
+    /**
+     * 自动性能检查
+     */
+    public void performanceHealthCheck() {
+        // 内存使用率检查
+        Runtime runtime = Runtime.getRuntime();
+        double memoryUsage = (double)(runtime.totalMemory() - runtime.freeMemory()) / runtime.maxMemory();
+        recordPerformanceWarning("memory_usage", memoryUsage * 100, 80.0);
+        
+        // CPU使用率检查
+        double cpuUsage = getCpuUsageEstimate();
+        recordPerformanceWarning("cpu_usage", cpuUsage, 70.0);
+        
+        // 记录健康检查
+        recordTimer("performance.health_check", Duration.ofMillis(System.currentTimeMillis() - startTime.toEpochMilli()));
     }
 }
