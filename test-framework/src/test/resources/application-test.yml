@@ -1,0 +1,276 @@
+# 游戏服务器框架全方位端到端测试配置
+# 用于配置各种测试场景和性能指标
+
+# 测试框架基础配置
+test:
+  framework:
+    # 基础配置
+    base:
+      name: "游戏服务器框架端到端测试"
+      version: "1.0.0"
+      timeout: 300000 # 5分钟总超时
+      retry-count: 3
+      parallel-execution: true
+      max-concurrent-tests: 10
+    
+    # 环境配置
+    environments:
+      test:
+        name: "测试环境"
+        services:
+          gateway:
+            host: "localhost"
+            port: 8080
+            health-check-url: "/actuator/health"
+          database:
+            url: "jdbc:h2:mem:testdb"
+            driver: "org.h2.Driver"
+            username: "sa"
+            password: ""
+          redis:
+            host: "localhost"
+            port: 6379
+            timeout: 3000
+        startup:
+          max-startup-time: 30000 # 30秒
+          health-check-interval: 1000
+          retry-count: 5
+    
+    # 性能测试配置
+    performance:
+      # CPU使用率测试
+      cpu:
+        max-usage-percent: 80.0
+        monitoring-duration: 60000 # 1分钟
+        sampling-interval: 1000
+      
+      # 内存使用测试
+      memory:
+        max-usage-percent: 85.0
+        monitoring-duration: 60000
+        sampling-interval: 1000
+        gc-monitoring: true
+      
+      # 响应时间测试
+      response-time:
+        max-avg-response-time: 50 # 毫秒
+        max-p99-response-time: 200 # 毫秒
+        sample-count: 1000
+        warm-up-requests: 100
+      
+      # 吞吐量测试
+      throughput:
+        min-requests-per-second: 10000
+        min-messages-per-second: 50000
+        test-duration: 60000
+        concurrent-clients: 100
+    
+    # 压力测试配置
+    stress:
+      # 登录风暴测试
+      login-storm:
+        max-concurrent-logins: 5000
+        target-success-rate: 95.0 # 95%成功率
+        ramp-up-time: 10000 # 10秒内达到最大并发
+        test-duration: 60000
+      
+      # 消息压力测试
+      message-stress:
+        max-messages-per-second: 100000
+        concurrent-senders: 100
+        message-size: 1024 # 字节
+        test-duration: 300000 # 5分钟
+        target-success-rate: 99.0
+      
+      # 连接压力测试
+      connection-stress:
+        max-concurrent-connections: 10000
+        connection-rate: 1000 # 每秒新建连接数
+        connection-hold-time: 30000 # 连接保持时间
+        target-success-rate: 95.0
+    
+    # 稳定性测试配置
+    stability:
+      # 长期运行测试
+      long-term:
+        test-duration: 86400000 # 24小时（测试中压缩为较短时间）
+        operation-interval: 1000 # 每秒操作
+        max-error-rate: 1.0 # 1%错误率
+        memory-leak-threshold: 10.0 # 10%内存增长阈值
+      
+      # 故障恢复测试
+      fault-tolerance:
+        network-failure-simulation: true
+        database-failure-simulation: true
+        service-restart-simulation: true
+        recovery-time-threshold: 30000 # 30秒内恢复
+    
+    # 端到端业务流程测试配置
+    business-flow:
+      # 用户登录流程
+      login-flow:
+        test-users: 1000
+        concurrent-logins: 100
+        login-timeout: 5000
+        token-expire-time: 3600000 # 1小时
+      
+      # 游戏操作流程
+      game-operations:
+        operations-per-user: 100
+        operation-interval: 1000
+        operation-types:
+          - "move"
+          - "attack"
+          - "pickup"
+          - "skill"
+          - "chat"
+      
+      # 聊天系统流程
+      chat-system:
+        channels:
+          - "world"
+          - "guild"
+          - "private"
+        messages-per-user: 50
+        message-rate: 10 # 每秒消息数
+        broadcast-ratio: 0.8 # 80%广播消息
+      
+      # 多玩家交互流程
+      multiplayer:
+        concurrent-players: 1000
+        interaction-rate: 5 # 每秒交互次数
+        pvp-ratio: 0.2 # 20%PVP交互
+        pve-ratio: 0.8 # 80%PVE交互
+    
+    # 数据验证配置
+    validation:
+      # 数据一致性验证
+      data-consistency:
+        check-interval: 5000
+        tolerance: 0.01 # 1%容差
+        retry-count: 3
+      
+      # 性能指标验证
+      performance-metrics:
+        response-time-threshold: 100 # 毫秒
+        throughput-threshold: 1000 # 请求/秒
+        error-rate-threshold: 1.0 # 1%
+        cpu-usage-threshold: 80.0 # 80%
+        memory-usage-threshold: 85.0 # 85%
+    
+    # 报告配置
+    reporting:
+      # 测试报告生成
+      test-report:
+        format: ["html", "json", "xml"]
+        detail-level: "comprehensive"
+        include-performance-charts: true
+        include-error-analysis: true
+      
+      # 性能报告
+      performance-report:
+        include-timeline: true
+        include-percentiles: true
+        include-comparisons: true
+        chart-resolution: "1m" # 1分钟精度
+      
+      # 输出配置
+      output:
+        console-logging: true
+        file-logging: true
+        log-level: "INFO"
+        report-directory: "target/test-reports"
+
+# Spring Boot测试配置
+spring:
+  # 测试数据源配置
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  
+  # H2控制台配置（测试环境）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  
+  # Redis配置（测试环境使用嵌入式Redis）
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+# 游戏服务器测试配置
+game:
+  server:
+    name: "test-game-server"
+    port: 8080
+    
+  # 网络配置（测试环境）
+  network:
+    tcp:
+      port: 9090
+      boss-threads: 1
+      worker-threads: 2
+    websocket:
+      port: 9091
+      path: /ws
+  
+  # 缓存配置（测试环境）
+  cache:
+    type: caffeine
+    caffeine:
+      maximum-size: 1000
+      expire-after-write: 300s
+  
+  # 多实例测试配置
+  multi-instance:
+    enabled: false # 测试环境关闭多实例
+    services:
+      test-service:
+        instances: 1
+        base-port: 9000
+        port-increment: 1
+
+# 日志配置
+logging:
+  level:
+    com.lx.gameserver: DEBUG
+    org.springframework: INFO
+    org.hibernate: WARN
+    io.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: "target/logs/e2e-test.log"
+
+# 管理端点配置（测试环境）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ["health", "info", "metrics", "prometheus"]
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
