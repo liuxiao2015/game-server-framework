@@ -1,0 +1,352 @@
+# =============================================================================
+# 游戏服务器框架 - 生产环境 Docker Compose 配置
+# =============================================================================
+# 功能: 完整的生产环境服务编排，包括应用、数据库、缓存、监控等
+# 版本: 1.0.0
+# =============================================================================
+
+version: '3.8'
+
+# 网络配置
+networks:
+  gameserver-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 数据卷配置
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  logs-data:
+    driver: local
+
+# 服务配置
+services:
+  # ==========================================================================
+  # 数据库服务
+  # ==========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: gameserver-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gameserver}
+      MYSQL_USER: ${MYSQL_USER:-gameserver}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gameserver123}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/config/mysql/my.cnf:/etc/mysql/conf.d/gameserver.cnf:ro
+      - ./docker/config/mysql/init:/docker-entrypoint-initdb.d:ro
+      - logs-data:/var/log/mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max-connections=1000
+      --innodb-buffer-pool-size=1G
+      --slow-query-log=1
+      --slow-query-log-file=/var/log/mysql/slow.log
+      --long-query-time=2
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+      interval: 30s
+      start_period: 60s
+
+  # ==========================================================================
+  # Redis 缓存服务
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: gameserver-redis
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+      - ./docker/config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 5
+      interval: 30s
+
+  # ==========================================================================
+  # 游戏服务器应用
+  # ==========================================================================
+  gameserver-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_VERSION=${BUILD_VERSION:-1.0.0}
+    image: gameserver-framework:${BUILD_VERSION:-latest}
+    container_name: gameserver-app
+    restart: unless-stopped
+    environment:
+      # Spring配置
+      SPRING_PROFILES_ACTIVE: docker,prod
+      
+      # 数据库配置
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-gameserver}
+      DB_USERNAME: ${MYSQL_USER:-gameserver}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-gameserver123}
+      DDL_AUTO: update
+      SHOW_SQL: false
+      
+      # Redis配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      
+      # 服务器配置
+      SERVER_NAME: prod-gameserver
+      SERVER_PORT: 8080
+      TCP_PORT: 9090
+      WS_PORT: 9091
+      LOG_LEVEL: INFO
+      
+      # JVM配置
+      JAVA_OPTS: >-
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:+UseStringDeduplication
+        -Xloggc:/app/logs/gc.log
+        -XX:+PrintGCDetails
+        -XX:+PrintGCTimeStamps
+        -XX:+UseGCLogFileRotation
+        -XX:NumberOfGCLogFiles=3
+        -XX:GCLogFileSize=10M
+        -Dspring.profiles.active=docker,prod
+        
+      # 时区设置
+      TZ: Asia/Shanghai
+    ports:
+      - "${APP_HTTP_PORT:-8080}:8080"
+      - "${APP_ADMIN_PORT:-8090}:8090"
+      - "${APP_TCP_PORT:-9090}:9090"
+      - "${APP_WS_PORT:-9091}:9091"
+    volumes:
+      - logs-data:/app/logs
+      - ./docker/config/app:/app/config:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.20
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+      start_period: 120s
+
+  # ==========================================================================
+  # Nginx 反向代理
+  # ==========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: gameserver-nginx
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./docker/config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/config/nginx/ssl:/etc/nginx/ssl:ro
+      - logs-data:/var/log/nginx
+    depends_on:
+      - gameserver-app
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.30
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+
+  # ==========================================================================
+  # Prometheus 监控
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gameserver-prometheus
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "${PROMETHEUS_PORT:-9000}:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./docker/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/config/prometheus/rules:/etc/prometheus/rules:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.40
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+
+  # ==========================================================================
+  # Grafana 可视化
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gameserver-grafana
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.41
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+
+  # ==========================================================================
+  # Elasticsearch 日志存储
+  # ==========================================================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: gameserver-elasticsearch
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.50
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"yellow\"\\|\"status\":\"green\"'"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 60s
+
+  # ==========================================================================
+  # Logstash 日志处理
+  # ==========================================================================
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: gameserver-logstash
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - ./docker/config/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./docker/config/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - logs-data:/logs:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.51
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ==========================================================================
+  # Kibana 日志可视化
+  # ==========================================================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: gameserver-kibana
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      gameserver-network:
+        ipv4_address: 172.20.0.52
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 120s

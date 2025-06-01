@@ -1,0 +1,271 @@
+# GameServer Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gameserver-config
+  labels:
+    app: gameserver
+    component: config
+data:
+  # Database Configuration
+  db.host: "mysql-service"
+  db.port: "3306"
+  db.name: "gameserver"
+  
+  # Redis Configuration
+  redis.host: "redis-service"
+  redis.port: "6379"
+  
+  # Application Configuration
+  server.port: "8080"
+  management.port: "8090"
+  tcp.port: "9090"
+  websocket.port: "9091"
+  
+  # Game Configuration
+  game.max-players: "10000"
+  game.session-timeout: "1800"
+  game.heartbeat-interval: "30"
+  
+  # Logging Configuration
+  logging.level.root: "INFO"
+  logging.level.com.lx.gameserver: "DEBUG"
+  logging.pattern.console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  
+  # Actuator Configuration
+  management.endpoints.web.exposure.include: "health,info,metrics,prometheus"
+  management.endpoint.health.show-details: "always"
+  management.metrics.export.prometheus.enabled: "true"
+  
+  # Spring Configuration
+  application.yml: |
+    spring:
+      profiles:
+        active: k8s,prod
+      application:
+        name: gameserver-framework
+      
+      # Database Configuration
+      datasource:
+        url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+          maximum-pool-size: 20
+          minimum-idle: 5
+          idle-timeout: 300000
+          max-lifetime: 1800000
+          connection-timeout: 20000
+          validation-timeout: 5000
+          leak-detection-threshold: 60000
+      
+      # JPA Configuration
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.MySQL8Dialect
+            format_sql: false
+            jdbc:
+              batch_size: 50
+            order_inserts: true
+            order_updates: true
+            generate_statistics: false
+      
+      # Redis Configuration
+      redis:
+        host: ${REDIS_HOST}
+        port: ${REDIS_PORT}
+        password: ${REDIS_PASSWORD:}
+        timeout: 3000ms
+        lettuce:
+          pool:
+            max-active: 16
+            max-idle: 8
+            min-idle: 0
+            max-wait: 1000ms
+        database: 0
+      
+      # Cache Configuration
+      cache:
+        type: redis
+        redis:
+          time-to-live: 1800000
+          cache-null-values: false
+          use-key-prefix: true
+          key-prefix: "gameserver:"
+    
+    # Server Configuration
+    server:
+      port: ${SERVER_PORT:8080}
+      servlet:
+        context-path: /
+      compression:
+        enabled: true
+        mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+        min-response-size: 1024
+      tomcat:
+        threads:
+          max: 200
+          min-spare: 10
+        max-connections: 8192
+        accept-count: 100
+        connection-timeout: 20000
+    
+    # Management Configuration
+    management:
+      server:
+        port: ${MANAGEMENT_PORT:8090}
+      endpoints:
+        web:
+          exposure:
+            include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+          base-path: /actuator
+      endpoint:
+        health:
+          show-details: always
+          show-components: always
+        metrics:
+          enabled: true
+        prometheus:
+          enabled: true
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+            step: 30s
+        tags:
+          application: ${spring.application.name}
+          pod: ${POD_NAME:unknown}
+          namespace: ${POD_NAMESPACE:unknown}
+          node: ${NODE_NAME:unknown}
+        web:
+          server:
+            request:
+              autotime:
+                enabled: true
+    
+    # Game Server Configuration
+    game:
+      server:
+        name: ${POD_NAME:gameserver}
+        max-players: ${GAME_MAX_PLAYERS:10000}
+        session-timeout: ${GAME_SESSION_TIMEOUT:1800}
+        heartbeat-interval: ${GAME_HEARTBEAT_INTERVAL:30}
+      
+      # Network Configuration
+      network:
+        tcp:
+          port: ${TCP_PORT:9090}
+          boss-threads: 2
+          worker-threads: 8
+          so-backlog: 1024
+          so-keepalive: true
+          tcp-nodelay: true
+        websocket:
+          port: ${WEBSOCKET_PORT:9091}
+          path: /ws
+          allowed-origins: "*"
+          buffer-size: 8192
+      
+      # Security Configuration
+      security:
+        jwt:
+          secret: ${JWT_SECRET}
+          expiration: 86400
+          refresh-expiration: 604800
+        cors:
+          allowed-origins: "*"
+          allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+          allowed-headers: "*"
+          allow-credentials: true
+    
+    # Logging Configuration
+    logging:
+      level:
+        root: ${LOGGING_LEVEL_ROOT:INFO}
+        com.lx.gameserver: ${LOGGING_LEVEL_GAMESERVER:DEBUG}
+        org.springframework: WARN
+        org.hibernate: WARN
+        com.zaxxer.hikari: WARN
+      pattern:
+        console: "${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n}"
+        file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+      file:
+        name: /app/logs/application.log
+        max-size: 100MB
+        max-history: 7
+
+---
+# GameServer Logback Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gameserver-logback-config
+  labels:
+    app: gameserver
+    component: logging
+data:
+  logback-spring.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+        <springProfile name="!k8s">
+            <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+            <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+            <root level="INFO">
+                <appender-ref ref="CONSOLE"/>
+            </root>
+        </springProfile>
+        
+        <springProfile name="k8s">
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                    <providers>
+                        <timestamp/>
+                        <logLevel/>
+                        <loggerName/>
+                        <message/>
+                        <mdc/>
+                        <arguments/>
+                        <stackTrace/>
+                        <pattern>
+                            <pattern>
+                                {
+                                    "service": "gameserver",
+                                    "pod": "${POD_NAME:-unknown}",
+                                    "namespace": "${POD_NAMESPACE:-unknown}",
+                                    "node": "${NODE_NAME:-unknown}"
+                                }
+                            </pattern>
+                        </pattern>
+                    </providers>
+                </encoder>
+            </appender>
+            
+            <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>/app/logs/application.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>/app/logs/application.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                    <maxFileSize>100MB</maxFileSize>
+                    <maxHistory>7</maxHistory>
+                    <totalSizeCap>1GB</totalSizeCap>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+                </encoder>
+            </appender>
+            
+            <logger name="com.lx.gameserver" level="DEBUG"/>
+            <logger name="org.springframework" level="WARN"/>
+            <logger name="org.hibernate" level="WARN"/>
+            <logger name="com.zaxxer.hikari" level="WARN"/>
+            
+            <root level="INFO">
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="FILE"/>
+            </root>
+        </springProfile>
+    </configuration>

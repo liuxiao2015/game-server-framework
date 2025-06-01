@@ -1,0 +1,286 @@
+# =============================================================================
+# 游戏服务器框架 - 开发环境 Docker Compose 配置
+# =============================================================================
+# 功能: 轻量级开发环境，支持热重载和调试
+# 版本: 1.0.0
+# =============================================================================
+
+version: '3.8'
+
+# 网络配置
+networks:
+  gameserver-dev:
+    driver: bridge
+
+# 数据卷配置
+volumes:
+  mysql-dev-data:
+    driver: local
+  redis-dev-data:
+    driver: local
+
+# 服务配置
+services:
+  # ==========================================================================
+  # 开发数据库 - MySQL
+  # ==========================================================================
+  mysql-dev:
+    image: mysql:8.0
+    container_name: gameserver-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: gameserver_dev
+      MYSQL_USER: gameserver
+      MYSQL_PASSWORD: gameserver123
+      TZ: Asia/Shanghai
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql-dev-data:/var/lib/mysql
+      - ./docker/config/mysql/my.cnf:/etc/mysql/conf.d/gameserver.cnf:ro
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max-connections=500
+      --innodb-buffer-pool-size=256M
+    networks:
+      - gameserver-dev
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+  # ==========================================================================
+  # 开发缓存 - Redis
+  # ==========================================================================
+  redis-dev:
+    image: redis:7-alpine
+    container_name: gameserver-redis-dev
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis-dev-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - gameserver-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+
+  # ==========================================================================
+  # PhpMyAdmin - 数据库管理工具
+  # ==========================================================================
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: gameserver-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql-dev
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
+      TZ: Asia/Shanghai
+    ports:
+      - "18080:80"
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # Redis Commander - Redis管理工具
+  # ==========================================================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: gameserver-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis-dev:6379
+      TZ: Asia/Shanghai
+    ports:
+      - "18081:8081"
+    depends_on:
+      redis-dev:
+        condition: service_healthy
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # 游戏服务器应用 - 开发模式
+  # ==========================================================================
+  gameserver-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: gameserver-framework:dev
+    container_name: gameserver-app-dev
+    restart: unless-stopped
+    environment:
+      # Spring配置
+      SPRING_PROFILES_ACTIVE: dev,docker
+      
+      # 数据库配置
+      DB_HOST: mysql-dev
+      DB_PORT: 3306
+      DB_NAME: gameserver_dev
+      DB_USERNAME: gameserver
+      DB_PASSWORD: gameserver123
+      DDL_AUTO: create-drop
+      SHOW_SQL: true
+      
+      # Redis配置
+      REDIS_HOST: redis-dev
+      REDIS_PORT: 6379
+      
+      # 开发配置
+      SERVER_NAME: dev-gameserver
+      LOG_LEVEL: DEBUG
+      
+      # 调试端口
+      JAVA_DEBUG_PORT: 5005
+      
+      # JVM配置（开发优化）
+      JAVA_OPTS: >-
+        -Xms256m -Xmx1g
+        -XX:+UseG1GC
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        -Dspring.profiles.active=dev,docker
+        -Dspring.devtools.restart.enabled=true
+        -Dspring.devtools.livereload.enabled=true
+        
+      # 时区设置
+      TZ: Asia/Shanghai
+    ports:
+      - "18000:8080"   # HTTP端口
+      - "18090:8090"   # 管理端口
+      - "19090:9090"   # TCP游戏端口
+      - "19091:9091"   # WebSocket端口
+      - "15005:5005"   # 调试端口
+    volumes:
+      # 源码热重载
+      - ./src:/app/src:ro
+      - ./target:/app/target
+      # 配置文件
+      - ./docker/config/app-dev:/app/config:ro
+      # 日志文件
+      - ./logs:/app/logs
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+    networks:
+      - gameserver-dev
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+          cpus: '1.5'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # ==========================================================================
+  # Mailhog - 邮件测试工具
+  # ==========================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: gameserver-mailhog
+    restart: unless-stopped
+    ports:
+      - "18025:8025"  # Web界面
+      - "11025:1025"  # SMTP端口
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # Adminer - 轻量级数据库管理
+  # ==========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: gameserver-adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql-dev
+      TZ: Asia/Shanghai
+    ports:
+      - "18082:8080"
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # Prometheus - 开发监控（简化版）
+  # ==========================================================================
+  prometheus-dev:
+    image: prom/prometheus:latest
+    container_name: gameserver-prometheus-dev
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "19000:9090"
+    volumes:
+      - ./docker/config/prometheus/prometheus-dev.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1d'
+      - '--web.enable-lifecycle'
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # Grafana - 开发可视化（简化版）
+  # ==========================================================================
+  grafana-dev:
+    image: grafana/grafana:latest
+    container_name: gameserver-grafana-dev
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+    ports:
+      - "13000:3000"
+    volumes:
+      - ./docker/config/grafana/provisioning-dev:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus-dev
+    networks:
+      - gameserver-dev
+
+  # ==========================================================================
+  # 文档服务器 - 提供开发文档
+  # ==========================================================================
+  docs:
+    image: nginx:alpine
+    container_name: gameserver-docs
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "18083:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro
+      - ./docker/config/nginx/docs.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - gameserver-dev
+
+# 开发环境快速启动配置
+x-common-variables: &common-variables
+  TZ: Asia/Shanghai
+  
+x-java-debug: &java-debug
+  JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005

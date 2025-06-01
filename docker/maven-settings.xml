@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven配置文件 - Docker构建优化
+  包含镜像配置和构建优化设置
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  
+  <!-- 本地仓库位置 -->
+  <localRepository>/root/.m2/repository</localRepository>
+  
+  <!-- 离线模式 -->
+  <offline>false</offline>
+  
+  <!-- 镜像配置 -->
+  <mirrors>
+    <!-- 阿里云镜像 -->
+    <mirror>
+      <id>aliyun-central</id>
+      <name>Aliyun Central</name>
+      <url>https://maven.aliyun.com/repository/central</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+    
+    <!-- 阿里云Spring镜像 -->
+    <mirror>
+      <id>aliyun-spring</id>
+      <name>Aliyun Spring</name>
+      <url>https://maven.aliyun.com/repository/spring</url>
+      <mirrorOf>spring-milestones,spring-snapshots</mirrorOf>
+    </mirror>
+  </mirrors>
+  
+  <!-- 配置文件 -->
+  <profiles>
+    <!-- 默认配置 -->
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      
+      <!-- 属性配置 -->
+      <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+      
+      <!-- 仓库配置 -->
+      <repositories>
+        <repository>
+          <id>central</id>
+          <name>Central Repository</name>
+          <url>https://maven.aliyun.com/repository/central</url>
+          <layout>default</layout>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        
+        <repository>
+          <id>spring-milestones</id>
+          <name>Spring Milestones</name>
+          <url>https://maven.aliyun.com/repository/spring</url>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+      
+      <!-- 插件仓库配置 -->
+      <pluginRepositories>
+        <pluginRepository>
+          <id>central</id>
+          <name>Central Repository</name>
+          <url>https://maven.aliyun.com/repository/central</url>
+          <layout>default</layout>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <releases>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+</settings>

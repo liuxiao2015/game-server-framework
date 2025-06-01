@@ -1,0 +1,78 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# 所有文件
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Java 文件
+[*.java]
+indent_size = 4
+max_line_length = 120
+
+# XML 文件 (Maven POM, Spring配置等)
+[*.xml]
+indent_size = 4
+
+# YAML 文件 (Spring Boot配置)
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON 文件
+[*.json]
+indent_size = 2
+
+# Properties 文件
+[*.properties]
+indent_size = 4
+
+# Shell 脚本
+[*.sh]
+indent_size = 4
+end_of_line = lf
+
+# Windows 批处理文件
+[*.bat]
+indent_size = 4
+end_of_line = crlf
+
+# JavaScript/TypeScript (如果有前端组件)
+[*.{js,ts,jsx,tsx}]
+indent_size = 2
+
+# CSS/SCSS (如果有前端组件)
+[*.{css,scss,sass}]
+indent_size = 2
+
+# HTML 文件
+[*.html]
+indent_size = 2
+
+# Markdown 文件
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Dockerfile
+[Dockerfile*]
+indent_size = 4
+
+# Makefile
+[Makefile]
+indent_style = tab
+
+# 忽略某些生成的或第三方文件
+[{package-lock.json,yarn.lock}]
+insert_final_newline = false
+
+# 忽略目标目录和构建产物
+[{target/**,build/**,dist/**,node_modules/**}]
+indent_style = unset
+indent_size = unset
