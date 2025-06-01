@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  文件名: service/service-logic/pom.xml
-  用途: 游戏服务器核心逻辑服务模块
-  内容: 
-    - 游戏核心逻辑
-    - 玩家数据管理
-    - 游戏状态处理
-    - 游戏规则实现
-  技术选型: 
-    - Actor模型
-    - 有限状态机
-    - 事件驱动设计
-  依赖关系: 
-    - 依赖common-core、common-api、frame-db、frame-cache、frame-actor
-    - 被其他游戏服务依赖
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -24,50 +8,23 @@
         <groupId>com.lx.gameserver</groupId>
         <artifactId>game-server-framework</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>service-logic</artifactId>
-    <name>Game Server Framework - Logic Service</name>
-    <description>游戏服务器核心逻辑服务，处理游戏核心流程与规则</description>
+    <artifactId>framework-test</artifactId>
+    <name>Game Server Framework - Test Suite</name>
+    <description>框架测试套件，包含性能测试、集成测试和验收测试</description>
 
     <dependencies>
-        <!-- 核心依赖 -->
+        <!-- 核心框架依赖 -->
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>launcher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>common-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>common-protocol</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>common-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <!-- 框架依赖 -->
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>frame-db</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>frame-rpc</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>frame-cache</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lx.gameserver</groupId>
-            <artifactId>frame-event</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -77,10 +34,20 @@
         </dependency>
         <dependency>
             <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-network</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-rpc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-concurrent</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -88,39 +55,45 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 测试框架 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
         </dependency>
-        
-        <!-- 工具类 -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        
-        <!-- 测试框架 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
+            <!-- Spring Boot插件 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.lx.gameserver.framework.test.FrameworkTestRunner</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

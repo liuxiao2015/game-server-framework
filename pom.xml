@@ -2,12 +2,12 @@
 <!--
   文件名: pom.xml
   用途: 高性能分布式游戏服务器框架的父POM配置
-  内容: 
+  内容:
     - 统一管理项目的依赖版本
     - 配置Java 21运行环境
     - 配置构建插件
     - 管理所有子模块
-  技术栈: 
+  技术栈:
     - Java 21
     - Spring Boot 3.2+
     - Netty
@@ -28,19 +28,19 @@
     <artifactId>game-server-framework</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    
+
     <!-- 项目基本信息 -->
     <name>Game Server Framework</name>
     <description>高性能分布式游戏服务器框架</description>
-    
+
     <!-- 子模块列表 -->
     <modules>
         <!-- 启动器模块 -->
         <module>launcher</module>
-        
+
         <!-- 公共模块 -->
         <module>common</module>
-        
+
         <!-- 框架模块 -->
         <module>frame/frame-network</module>
         <module>frame/frame-db</module>
@@ -53,16 +53,16 @@
         <module>frame/frame-config</module>
         <module>frame/frame-monitor</module>
         <!-- <module>frame/frame-security</module> Temporarily disabled due to missing servlet dependencies -->
-        
+
         <!-- 测试模块 -->
         <module>framework-test</module>
         <module>test-framework</module>
-        
+
         <!-- 管理控制台 -->
         <module>admin-console</module>
-        
+
         <!-- 服务模块 -->
-        <!-- Temporarily disabled while fixing framework issues  
+        <!-- Temporarily disabled while fixing framework issues
         <module>service/service-gateway</module>
         <module>service/service-login</module>
         <module>service/service-chat</module>
@@ -72,9 +72,10 @@
         <module>service/service-activity</module>
         <module>service/service-payment</module>
         -->
-        
+
         <!-- 业务模块 -->
         <module>business/ranking</module>
+        <module>server_tool</module>
         <!-- Temporarily disabled due to compilation issues
         <module>business/activity</module>
         <module>business/payment</module>
@@ -87,7 +88,7 @@
         <module>business/logic</module>
         -->
     </modules>
-    
+
     <!-- 属性配置 -->
     <properties>
         <!-- Java版本配置 - 当前使用Java 17，计划升级到Java 21 -->
@@ -98,7 +99,7 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        
+
         <!-- 依赖版本配置 -->
         <spring-boot.version>3.2.0</spring-boot.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
@@ -124,7 +125,7 @@
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.7.0</mockito.version>
         <p3c-pmd.version>2.1.1</p3c-pmd.version>
-        
+
         <!-- 插件版本配置 -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
@@ -132,7 +133,7 @@
         <maven-checkstyle-plugin.version>3.3.0</maven-checkstyle-plugin.version>
         <license-maven-plugin.version>4.2</license-maven-plugin.version>
     </properties>
-    
+
     <!-- 依赖管理 -->
     <dependencyManagement>
         <dependencies>
@@ -144,7 +145,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Spring Cloud 依赖 -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -153,7 +154,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Alibaba Cloud 依赖 -->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
@@ -162,7 +163,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Resilience4j 依赖 -->
             <dependency>
                 <groupId>io.github.resilience4j</groupId>
@@ -171,14 +172,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Netty 网络通信 -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
             </dependency>
-            
+
             <!-- Dubbo 微服务通信 -->
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
@@ -190,7 +191,7 @@
                 <artifactId>dubbo-spring-boot-starter</artifactId>
                 <version>${dubbo.version}</version>
             </dependency>
-            
+
             <!-- Protobuf 协议定义 -->
             <dependency>
                 <groupId>com.google.protobuf</groupId>
@@ -207,7 +208,7 @@
                 <artifactId>protobuf-java-format</artifactId>
                 <version>${protobuf-java-format.version}</version>
             </dependency>
-            
+
             <!-- MyBatis Plus 数据库操作 -->
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -219,7 +220,7 @@
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector.version}</version>
             </dependency>
-            
+
             <!-- Redis 与 Caffeine 缓存 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -231,14 +232,14 @@
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
             </dependency>
-            
+
             <!-- Disruptor 高性能事件处理 -->
             <dependency>
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
                 <version>${disruptor.version}</version>
             </dependency>
-            
+
             <!-- Lombok -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -246,7 +247,7 @@
                 <version>${lombok.version}</version>
                 <scope>provided</scope>
             </dependency>
-            
+
             <!-- 日志 -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -258,7 +259,7 @@
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
             </dependency>
-            
+
             <!-- 工具库 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -290,7 +291,7 @@
                 <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
-            
+
             <!-- 测试框架 -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -312,7 +313,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <!-- 构建配置 -->
     <build>
         <pluginManagement>
@@ -332,7 +333,7 @@
                         </compilerArgs>
                     </configuration>
                 </plugin>
-                
+
                 <!-- 资源处理插件 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -342,7 +343,7 @@
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
-                
+
                 <!-- 源码打包插件 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -357,7 +358,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- Checkstyle插件 - 阿里巴巴Java规范 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -387,7 +388,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- License插件 -->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -400,7 +401,7 @@
                         <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Spring Boot插件 -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
@@ -417,7 +418,7 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

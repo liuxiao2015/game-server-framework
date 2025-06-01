@@ -2,12 +2,12 @@
 <!--
   文件名: pom.xml
   用途: 管理后台控制台模块的Maven配置文件
-  内容: 
+  内容:
     - 定义管理控制台模块的基本信息和依赖
     - 支持Web可视化管理界面
     - 包含Spring Boot Web、Security、WebSocket等核心依赖
     - 支持权限管理、监控、配置管理、数据分析等企业级功能
-  技术栈: 
+  技术栈:
     - Spring Boot 3.2+ (Web框架)
     - Spring Security (安全认证)
     - WebSocket (实时通信)
@@ -28,7 +28,7 @@
         <groupId>com.lx.gameserver</groupId>
         <artifactId>game-server-framework</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <!-- 模块信息 -->

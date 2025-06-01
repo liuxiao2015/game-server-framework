@@ -2,12 +2,12 @@
 <!--
   文件名: pom.xml
   用途: 游戏服务器测试框架模块的Maven配置
-  内容: 
+  内容:
     - 综合测试框架的依赖管理
     - 单元测试、集成测试、性能测试等工具
     - 测试自动化和CI/CD集成
     - 游戏特定测试工具
-  技术选型: 
+  技术选型:
     - JUnit 5 + Mockito
     - JMeter/Gatling性能测试
     - Docker容器化测试
@@ -26,7 +26,7 @@
         <groupId>com.lx.gameserver</groupId>
         <artifactId>game-server-framework</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../../pom.xml</relativePath>
     </parent>
 
     <artifactId>test-framework</artifactId>
@@ -51,7 +51,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        
+
         <!-- 测试框架 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -74,7 +74,7 @@
             <version>${mockito.version}</version>
             <scope>compile</scope>
         </dependency>
-        
+
         <!-- 性能测试 -->
         <dependency>
             <groupId>org.apache.jmeter</groupId>
@@ -86,7 +86,7 @@
             <artifactId>ApacheJMeter_java</artifactId>
             <version>5.6.3</version>
         </dependency>
-        
+
         <!-- Docker测试容器 -->
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -98,7 +98,7 @@
             <artifactId>mysql</artifactId>
             <version>1.19.3</version>
         </dependency>
-        
+
         <!-- 监控指标 -->
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -108,7 +108,7 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-        
+
         <!-- 报告生成 -->
         <dependency>
             <groupId>com.itextpdf</groupId>
@@ -121,7 +121,7 @@
             <artifactId>poi-ooxml</artifactId>
             <version>5.2.5</version>
         </dependency>
-        
+
         <!-- JSON处理 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -131,7 +131,7 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
-        
+
         <!-- 工具库 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -141,14 +141,14 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-        
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- 日志 -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -159,7 +159,7 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <!-- Maven编译插件 -->
@@ -167,7 +167,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            
+
             <!-- Spring Boot插件 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -182,7 +182,7 @@
                     </excludes>
                 </configuration>
             </plugin>
-            
+
             <!-- Surefire插件用于单元测试 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -195,7 +195,7 @@
                     </includes>
                 </configuration>
             </plugin>
-            
+
             <!-- Failsafe插件用于集成测试 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -146,11 +146,11 @@ mvn test -Dtest=FrameworkIntegrationTest
 
 ## 📖 文档
 
-- [完整优化报告](./FINAL_OPTIMIZATION_REPORT.md) - 框架全面优化成果
-- [架构设计文档](./OPTIMIZATION_RESULTS.md) - 系统架构和设计理念
-- [评估报告](./COMPREHENSIVE_FRAMEWORK_ASSESSMENT_REPORT.md) - 框架完整性评估
-- [API文档](./docs/api.md) - REST API接口文档
-- [部署指南](./docs/deployment.md) - 生产环境部署指南
+- [完整优化报告](server_tool/docs/report/FINAL_OPTIMIZATION_REPORT.md) - 框架全面优化成果
+- [架构设计文档](server_tool/docs/report/OPTIMIZATION_RESULTS.md) - 系统架构和设计理念
+- [评估报告](server_tool/docs/report/COMPREHENSIVE_FRAMEWORK_ASSESSMENT_REPORT.md) - 框架完整性评估
+- [API文档](server_tool/docs/api.md) - REST API接口文档
+- [部署指南](server_tool/docs/deployment.md) - 生产环境部署指南
 
 ## 🔧 开发指南
 
