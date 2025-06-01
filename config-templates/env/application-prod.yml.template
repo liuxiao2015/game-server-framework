@@ -1,0 +1,304 @@
+# =============================================================================
+# 游戏服务器框架配置模板 - 生产环境
+# =============================================================================
+# 使用说明:
+# 1. 复制此文件为 application-prod.yml
+# 2. 根据实际环境修改相关配置
+# 3. 确保敏感信息使用环境变量或配置中心
+# =============================================================================
+
+# Spring框架配置
+spring:
+  profiles:
+    active: prod
+  application:
+    name: gameserver-framework
+  
+  # 数据源配置
+  datasource:
+    # 主数据库配置
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:gameserver}?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:gameserver}
+    password: ${DB_PASSWORD:your_secure_password_here}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # 连接池配置 (HikariCP)
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:50}          # 最大连接数
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}               # 最小空闲连接数
+      idle-timeout: ${DB_POOL_IDLE_TIMEOUT:300000}       # 空闲连接超时时间(5分钟)
+      max-lifetime: ${DB_POOL_MAX_LIFETIME:1800000}      # 连接最大存活时间(30分钟)
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:20000}  # 连接超时时间(20秒)
+      validation-timeout: ${DB_POOL_VALIDATION_TIMEOUT:5000}   # 验证超时时间(5秒)
+      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION:60000}  # 连接泄漏检测阈值(60秒)
+      connection-test-query: SELECT 1
+      auto-commit: true
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}                 # 生产环境建议使用validate
+    show-sql: ${JPA_SHOW_SQL:false}                      # 生产环境建议关闭
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false                                # 生产环境关闭
+        jdbc:
+          batch_size: ${JPA_BATCH_SIZE:50}               # 批量操作大小
+        order_inserts: true                              # 优化插入顺序
+        order_updates: true                              # 优化更新顺序
+        generate_statistics: ${JPA_GENERATE_STATISTICS:false}  # 生产环境关闭统计
+        cache:
+          use_second_level_cache: true                   # 启用二级缓存
+          use_query_cache: true                          # 启用查询缓存
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+  
+  # Redis配置
+  redis:
+    # 单机配置
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:your_redis_password_here}
+    database: ${REDIS_DATABASE:0}
+    timeout: ${REDIS_TIMEOUT:3000ms}
+    connect-timeout: ${REDIS_CONNECT_TIMEOUT:3000ms}
+    
+    # Lettuce连接池配置
+    lettuce:
+      pool:
+        max-active: ${REDIS_POOL_MAX_ACTIVE:32}          # 最大连接数
+        max-idle: ${REDIS_POOL_MAX_IDLE:16}              # 最大空闲连接数
+        min-idle: ${REDIS_POOL_MIN_IDLE:8}               # 最小空闲连接数
+        max-wait: ${REDIS_POOL_MAX_WAIT:1000ms}          # 最大等待时间
+    
+    # 集群配置 (如果使用Redis集群)
+    # cluster:
+    #   nodes:
+    #     - ${REDIS_CLUSTER_NODE1:redis-node1:7000}
+    #     - ${REDIS_CLUSTER_NODE2:redis-node2:7000}
+    #     - ${REDIS_CLUSTER_NODE3:redis-node3:7000}
+    #   max-redirects: 3
+  
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${CACHE_TTL:1800000}                 # 默认TTL 30分钟
+      cache-null-values: false                           # 不缓存null值
+      use-key-prefix: true                               # 使用key前缀
+      key-prefix: "${spring.application.name}:"         # key前缀
+  
+  # 消息队列配置 (RocketMQ)
+  rocketmq:
+    name-server: ${ROCKETMQ_NAME_SERVER:localhost:9876}
+    producer:
+      group: ${ROCKETMQ_PRODUCER_GROUP:gameserver_producer}
+      send-message-timeout: ${ROCKETMQ_SEND_TIMEOUT:3000}
+      retry-times-when-send-failed: ${ROCKETMQ_RETRY_TIMES:2}
+    consumer:
+      group: ${ROCKETMQ_CONSUMER_GROUP:gameserver_consumer}
+      consume-thread-min: ${ROCKETMQ_CONSUME_THREAD_MIN:20}
+      consume-thread-max: ${ROCKETMQ_CONSUME_THREAD_MAX:64}
+
+# 服务器配置
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  
+  # 压缩配置
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    min-response-size: 1024
+  
+  # Tomcat配置
+  tomcat:
+    threads:
+      max: ${TOMCAT_THREADS_MAX:200}                     # 最大线程数
+      min-spare: ${TOMCAT_THREADS_MIN_SPARE:25}          # 最小空闲线程数
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:8192}      # 最大连接数
+    accept-count: ${TOMCAT_ACCEPT_COUNT:200}             # 等待队列长度
+    connection-timeout: ${TOMCAT_CONNECTION_TIMEOUT:20000}  # 连接超时时间
+    max-http-header-size: ${TOMCAT_MAX_HTTP_HEADER_SIZE:8192}  # HTTP头最大大小
+    uri-encoding: UTF-8
+
+# 管理端点配置
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8090}
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized                      # 仅授权用户查看详情
+      show-components: when-authorized
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  
+  # 监控指标配置
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: ${METRICS_STEP:30s}                        # 指标收集间隔
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:prod}
+      region: ${REGION:unknown}
+      zone: ${ZONE:unknown}
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+            percentiles: 0.5,0.75,0.95,0.99               # 响应时间百分位
+
+# 游戏服务器配置
+game:
+  server:
+    name: ${GAME_SERVER_NAME:gameserver-prod}
+    max-players: ${GAME_MAX_PLAYERS:10000}               # 最大玩家数
+    session-timeout: ${GAME_SESSION_TIMEOUT:1800}       # 会话超时时间(秒)
+    heartbeat-interval: ${GAME_HEARTBEAT_INTERVAL:30}   # 心跳间隔(秒)
+    max-idle-time: ${GAME_MAX_IDLE_TIME:300}             # 最大空闲时间(秒)
+  
+  # 网络配置
+  network:
+    tcp:
+      port: ${TCP_PORT:9090}
+      boss-threads: ${TCP_BOSS_THREADS:4}                # Boss线程数
+      worker-threads: ${TCP_WORKER_THREADS:16}           # Worker线程数
+      so-backlog: ${TCP_SO_BACKLOG:2048}                 # 连接队列大小
+      so-keepalive: true                                 # 启用KeepAlive
+      tcp-nodelay: true                                  # 启用TCP_NODELAY
+      buffer-size: ${TCP_BUFFER_SIZE:65536}              # 缓冲区大小
+    websocket:
+      port: ${WEBSOCKET_PORT:9091}
+      path: /ws
+      allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:*}    # 允许的来源
+      buffer-size: ${WEBSOCKET_BUFFER_SIZE:8192}         # WebSocket缓冲区大小
+      max-sessions: ${WEBSOCKET_MAX_SESSIONS:5000}       # 最大WebSocket会话数
+  
+  # 安全配置
+  security:
+    jwt:
+      secret: ${JWT_SECRET:your_jwt_secret_key_here_change_in_production}
+      expiration: ${JWT_EXPIRATION:86400}                # JWT过期时间(秒) 24小时
+      refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}  # 刷新Token过期时间(秒) 7天
+      issuer: ${JWT_ISSUER:gameserver}
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:https://yourdomain.com}  # 生产环境指定域名
+      allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+      allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+      allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+      max-age: ${CORS_MAX_AGE:3600}
+  
+  # 业务配置
+  business:
+    ranking:
+      update-interval: ${RANKING_UPDATE_INTERVAL:300}    # 排行榜更新间隔(秒)
+      max-entries: ${RANKING_MAX_ENTRIES:1000}           # 排行榜最大条目数
+    chat:
+      max-message-length: ${CHAT_MAX_MESSAGE_LENGTH:500} # 聊天消息最大长度
+      rate-limit: ${CHAT_RATE_LIMIT:10}                  # 聊天频率限制(每分钟)
+    activity:
+      cache-timeout: ${ACTIVITY_CACHE_TIMEOUT:300}       # 活动缓存超时时间(秒)
+
+# 日志配置
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:WARN}                     # 生产环境使用WARN级别
+    com.lx.gameserver: ${LOGGING_LEVEL_GAMESERVER:INFO}  # 应用日志使用INFO级别
+    org.springframework: ${LOGGING_LEVEL_SPRING:WARN}
+    org.hibernate: ${LOGGING_LEVEL_HIBERNATE:WARN}
+    com.zaxxer.hikari: ${LOGGING_LEVEL_HIKARI:WARN}
+    # 安全相关日志
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:INFO}
+    # 网络相关日志
+    io.netty: ${LOGGING_LEVEL_NETTY:WARN}
+  
+  pattern:
+    console: "${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n}"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  
+  file:
+    name: ${LOGGING_FILE_NAME:/app/logs/application.log}
+    max-size: ${LOGGING_FILE_MAX_SIZE:100MB}             # 单个日志文件最大大小
+    max-history: ${LOGGING_FILE_MAX_HISTORY:30}          # 保留的日志文件数量
+    total-size-cap: ${LOGGING_FILE_TOTAL_SIZE_CAP:10GB}  # 日志文件总大小限制
+
+# 性能调优配置
+performance:
+  # 数据库连接池调优
+  database:
+    validation-query-timeout: 3
+    test-while-idle: true
+    test-on-borrow: false
+    test-on-return: false
+  
+  # JVM调优建议
+  jvm:
+    # -XX:+UseG1GC
+    # -XX:MaxGCPauseMillis=200
+    # -XX:+UseStringDeduplication
+    # -Xms4g -Xmx8g
+    # -XX:NewRatio=3
+
+# 外部服务配置
+external:
+  # 第三方支付
+  payment:
+    alipay:
+      app-id: ${ALIPAY_APP_ID:your_alipay_app_id}
+      private-key: ${ALIPAY_PRIVATE_KEY:your_alipay_private_key}
+      public-key: ${ALIPAY_PUBLIC_KEY:your_alipay_public_key}
+      gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi.alipay.com/gateway.do}
+    wechat:
+      app-id: ${WECHAT_APP_ID:your_wechat_app_id}
+      mch-id: ${WECHAT_MCH_ID:your_wechat_mch_id}
+      key: ${WECHAT_KEY:your_wechat_key}
+  
+  # 短信服务
+  sms:
+    provider: ${SMS_PROVIDER:aliyun}
+    access-key: ${SMS_ACCESS_KEY:your_sms_access_key}
+    secret-key: ${SMS_SECRET_KEY:your_sms_secret_key}
+    template-id: ${SMS_TEMPLATE_ID:your_sms_template_id}
+  
+  # 邮件服务
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your_email@gmail.com}
+    password: ${MAIL_PASSWORD:your_email_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# 环境特定配置
+environment:
+  name: ${ENVIRONMENT:production}
+  region: ${REGION:us-east-1}
+  zone: ${ZONE:us-east-1a}
+  cluster: ${CLUSTER:gameserver-prod}
+  
+# 配置加密 (使用Jasypt)
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:your_jasypt_password}
+    algorithm: PBEWITHHMACSHA512ANDAES_256
+    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
