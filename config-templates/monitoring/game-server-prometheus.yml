@@ -1,0 +1,53 @@
+# 游戏服务器专用Prometheus监控配置
+# 文件名: game-server-prometheus.yml
+# 用途: 游戏服务器关键指标监控配置
+# 包含: 性能指标、业务指标、系统指标
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "game_server_alerts.yml"
+
+scrape_configs:
+  # 游戏服务器应用监控
+  - job_name: 'game-server-app'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    
+  # JVM详细监控  
+  - job_name: 'game-server-jvm'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/actuator/prometheus'
+    params:
+      format: ['prometheus']
+    scrape_interval: 15s
+    
+  # 系统资源监控
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 30s
+    
+  # Redis监控
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['localhost:9121']
+    scrape_interval: 15s
+    
+  # MySQL监控
+  - job_name: 'mysql-exporter'
+    static_configs:
+      - targets: ['localhost:9104']
+    scrape_interval: 30s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

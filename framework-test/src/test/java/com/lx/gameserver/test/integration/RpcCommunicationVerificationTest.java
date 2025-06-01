@@ -307,6 +307,7 @@ class RpcCommunicationVerificationTest {
         public String callWithTimeout(String service, String method, String data, long timeoutMs) throws Exception {
             if ("slow-service".equals(service)) {
                 Thread.sleep(timeoutMs + 50); // 模拟超时
+                throw new TimeoutException("Service call timeout: " + service);
             }
             return processCall(service, method, data);
         }
@@ -323,6 +324,11 @@ class RpcCommunicationVerificationTest {
             // 模拟不存在的方法
             if ("nonexistent-method".equals(method)) {
                 throw new Exception("Method not found: " + method);
+            }
+            
+            // 处理广播相关的方法调用
+            if ("handleBroadcast".equals(method)) {
+                return "broadcast_response:broadcast_received:success:" + service;
             }
             
             // 模拟正常响应

@@ -1,0 +1,109 @@
+# 游戏服务器告警规则配置
+# 文件名: game_server_alerts.yml
+# 用途: 游戏服务器关键指标告警配置
+
+groups:
+  - name: game_server_performance
+    rules:
+      # RPC延迟告警
+      - alert: HighRpcLatency
+        expr: histogram_quantile(0.95, rate(rpc_duration_seconds_bucket[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          service: game-server
+        annotations:
+          summary: "游戏服务器RPC延迟过高"
+          description: "RPC P95延迟 {{ $value }}s 超过10ms阈值"
+          
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: game-server
+        annotations:
+          summary: "游戏服务器内存使用率过高"
+          description: "内存使用率 {{ $value }}% 超过80%阈值"
+          
+      # GC频率告警
+      - alert: HighGcFrequency
+        expr: rate(jvm_gc_collection_seconds_count[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: game-server
+        annotations:
+          summary: "游戏服务器GC频率过高"
+          description: "GC频率 {{ $value }}/s 可能影响性能"
+          
+  - name: game_server_business
+    rules:
+      # 并发连接数告警
+      - alert: HighConcurrentConnections
+        expr: active_connections > 8000
+        for: 1m
+        labels:
+          severity: warning
+          service: game-server
+        annotations:
+          summary: "游戏服务器并发连接数过高"
+          description: "当前连接数 {{ $value }} 接近上限"
+          
+      # 消息处理延迟告警
+      - alert: HighMessageProcessingLatency
+        expr: histogram_quantile(0.99, rate(message_processing_duration_seconds_bucket[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: game-server
+        annotations:
+          summary: "游戏消息处理延迟过高"
+          description: "消息处理P99延迟 {{ $value }}s 影响游戏体验"
+          
+      # 错误率告警
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          service: game-server
+        annotations:
+          summary: "游戏服务器错误率过高"
+          description: "错误率 {{ $value | humanizePercentage }} 超过5%阈值"
+          
+  - name: game_server_system
+    rules:
+      # CPU使用率告警
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: game-server
+        annotations:
+          summary: "服务器CPU使用率过高"
+          description: "CPU使用率 {{ $value }}% 超过80%阈值"
+          
+      # 磁盘空间告警
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 1m
+        labels:
+          severity: critical
+          service: game-server
+        annotations:
+          summary: "服务器磁盘空间不足"
+          description: "磁盘剩余空间 {{ $value }}% 低于10%阈值"
+          
+      # 服务可用性告警
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: game-server
+        annotations:
+          summary: "游戏服务器不可用"
+          description: "服务器 {{ $labels.instance }} 已下线"
