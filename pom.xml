@@ -57,18 +57,6 @@
         <!-- 测试模块和工具 -->
         <module>server_tool</module>
 
-        <!-- 服务模块 -->
-        <!-- Temporarily disabled while fixing framework issues
-        <module>service/service-gateway</module>
-        <module>service/service-login</module>
-        <module>service/service-chat</module>
-        <module>service/service-logic</module>
-        <module>service/service-scene</module>
-        <module>service/service-rank</module>
-        <module>service/service-activity</module>
-        <module>service/service-payment</module>
-        -->
-
         <!-- 业务模块 -->
         <module>business/ranking</module>
         <module>business/activity</module>
