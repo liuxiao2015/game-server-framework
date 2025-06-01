@@ -83,6 +83,11 @@
             <artifactId>frame-db</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.lx.gameserver</groupId>
+            <artifactId>frame-monitor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- 测试框架 -->
         <dependency>
