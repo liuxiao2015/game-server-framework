@@ -90,11 +90,13 @@
             <artifactId>frame-concurrent</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- TODO: Re-enable when frame-security is fixed
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-security</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
 
         <!-- Spring Boot核心依赖 -->
         <dependency>
@@ -122,6 +124,12 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+        </dependency>
+        
+        <!-- JPA API for Entity annotations -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
 
         <!-- 缓存依赖 -->

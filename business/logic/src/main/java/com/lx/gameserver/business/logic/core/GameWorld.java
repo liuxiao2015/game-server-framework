@@ -23,7 +23,7 @@ package com.lx.gameserver.business.logic.core;
 
 import com.lx.gameserver.frame.ecs.core.World;
 import com.lx.gameserver.frame.ecs.core.Entity;
-import com.lx.gameserver.frame.event.core.EventBus;
+import com.lx.gameserver.frame.event.EventBus;
 import com.lx.gameserver.business.logic.player.PlayerManager;
 import com.lx.gameserver.business.logic.scene.SceneManager;
 import lombok.Getter;
