@@ -59,11 +59,13 @@
         </dependency>
         
         <!-- 框架依赖 -->
+        <!-- TODO: Re-enable when frame-security is fixed
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-security</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-cache</artifactId>

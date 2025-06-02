@@ -38,8 +38,7 @@
     <description>游戏服务器聊天业务模块，提供完整的聊天功能和实时通信</description>
 
     <dependencies>
-        <!-- 核心依赖 - 暂时注释掉，先实现基础功能 -->
-        <!--
+        <!-- 核心依赖 -->
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>common-core</artifactId>
@@ -50,10 +49,8 @@
             <artifactId>common-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-        -->
         
-        <!-- 框架依赖 - 暂时注释掉，先实现基础功能 -->
-        <!--
+        <!-- 框架依赖 (暂时不包含 frame-security) -->
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-network</artifactId>
@@ -74,6 +71,7 @@
             <artifactId>frame-event</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- TODO: Re-enable when frame-security is fixed
         <dependency>
             <groupId>com.lx.gameserver</groupId>
             <artifactId>frame-security</artifactId>

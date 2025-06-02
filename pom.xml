@@ -63,11 +63,8 @@
         <module>business/payment</module>
         <!-- <module>business/scene</module> Temporarily disabled due to compilation issues -->
         <module>business/gateway</module>
-        <!-- Temporarily disabled while fixing security dependencies
-        <module>business/login</module>
         <module>business/chat</module>
-        <module>business/logic</module>
-        -->
+        <module>business/login</module>
     </modules>
 
     <!-- 属性配置 -->
