@@ -21,8 +21,10 @@
  */
 package com.lx.gameserver.business.scene.core;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -42,6 +44,8 @@ import java.util.*;
 @Slf4j
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SceneConfig {
 
     // ========== 基础配置 ==========
@@ -81,6 +85,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MapConfig {
         /** 地图ID */
         @Builder.Default
@@ -161,6 +167,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SpawnPoint {
         /** 刷新点ID */
         private String spawnId;
@@ -209,6 +217,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Portal {
         /** 传送点ID */
         private String portalId;
@@ -253,6 +263,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class NpcConfig {
         /** NPC ID */
         private String npcId;
@@ -301,6 +313,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MonsterConfig {
         /** 是否启用怪物刷新 */
         @Builder.Default
@@ -323,6 +337,8 @@ public class SceneConfig {
          */
         @Data
         @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
         public static class MonsterGroup {
             /** 组ID */
             private String groupId;
@@ -365,6 +381,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class AoiConfig {
         /** 网格大小 */
         @Builder.Default
@@ -402,6 +420,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SceneRules {
         /** 是否允许PVP */
         @Builder.Default
@@ -459,6 +479,8 @@ public class SceneConfig {
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PerformanceConfig {
         /** Tick间隔（毫秒） */
         @Builder.Default
@@ -502,27 +524,6 @@ public class SceneConfig {
     /** 自定义配置 */
     @Builder.Default
     private Map<String, Object> customConfig = new HashMap<>();
-
-    // ========== 默认构造函数 ==========
-
-    public SceneConfig() {
-        this.templateId = "";
-        this.version = "1.0.0";
-        this.maxEntities = 1000;
-        this.maxPlayers = 100;
-        this.lifeTime = 0;
-        this.emptyTimeout = Duration.ofMinutes(5).toMillis();
-        this.mapConfig = new MapConfig();
-        this.spawnPoints = new ArrayList<>();
-        this.portals = new ArrayList<>();
-        this.npcs = new ArrayList<>();
-        this.monsterConfig = new MonsterConfig();
-        this.aoiConfig = new AoiConfig();
-        this.rules = new SceneRules();
-        this.performanceConfig = new PerformanceConfig();
-        this.extensions = new HashMap<>();
-        this.customConfig = new HashMap<>();
-    }
 
     // ========== 工具方法 ==========
 

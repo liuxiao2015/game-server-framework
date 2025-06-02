@@ -23,8 +23,8 @@ package com.lx.gameserver.business.logic.core;
 
 import com.lx.gameserver.frame.actor.core.ActorSystem;
 import com.lx.gameserver.frame.ecs.core.World;
-import com.lx.gameserver.frame.cache.core.CacheManager;
-import com.lx.gameserver.frame.event.core.EventBus;
+import com.lx.gameserver.frame.cache.local.LocalCacheManager;
+import com.lx.gameserver.frame.event.EventBus;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +101,7 @@ public class LogicServer implements ApplicationListener<ApplicationReadyEvent> {
 
     /** 缓存管理器 */
     @Autowired(required = false)
-    private CacheManager cacheManager;
+    private LocalCacheManager cacheManager;
 
     /** 事件总线 */
     @Autowired(required = false)

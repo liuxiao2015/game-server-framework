@@ -61,10 +61,13 @@
         <module>business/ranking</module>
         <module>business/activity</module>
         <module>business/payment</module>
-        <!-- <module>business/scene</module> Temporarily disabled due to compilation issues -->
+        <module>business/scene</module>
         <module>business/gateway</module>
         <module>business/chat</module>
         <module>business/login</module>
+        <!-- TODO: Fix logic module compilation issues
+        <module>business/logic</module>
+        -->
     </modules>
 
     <!-- 属性配置 -->
